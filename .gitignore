@@ -1,0 +1,4 @@
+/kube-csr
+/kube-csr.csr
+/kube-csr.private_key
+/kube-csr.certificate

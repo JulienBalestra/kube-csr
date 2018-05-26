@@ -1,0 +1,66 @@
+version: 2
+
+templates:
+  job_template: &job_template
+    docker:
+      - image: golang:1.10
+    working_directory: /go/src/github.com/JulienBalestra/kube-csr
+
+jobs:
+  make:
+    <<: *job_template
+    steps:
+      - checkout
+      - run:
+          name: make
+          command: make
+
+  tests:
+    <<: *job_template
+    steps:
+      - checkout
+      - run:
+          name: tests
+          command: make check
+
+  gofmt:
+    <<: *job_template
+    steps:
+      - checkout
+      - run:
+          name: verify-gofmt
+          command: make verify-gofmt
+
+  docs:
+    <<: *job_template
+    steps:
+      - checkout
+      - run:
+          name: verify-docs
+          command: make verify-docs
+
+  license:
+    <<: *job_template
+    steps:
+      - checkout
+      - run:
+          name: verify-license
+          command: make verify-license
+
+
+workflows:
+  version: 2
+  tests:
+    jobs:
+      - tests
+
+  build:
+    jobs:
+      - make
+
+  verify:
+    jobs:
+      - gofmt
+      - docs
+      - license
+
