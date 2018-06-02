@@ -22,10 +22,12 @@ set -o pipefail
 
 PKG=$(dirname $0)/../../pkg
 CMD=$(dirname $0)/../../cmd
+EX=$(dirname $0)/../../examples
 SCRIPT=$(dirname $0)
 
 
 GOFMT="gofmt -s -w"
 find ${CMD} -name '*.go' | xargs ${GOFMT}
 find ${PKG} -name '*.go' | xargs ${GOFMT}
+find ${EX} -name '*.go' | xargs ${GOFMT}
 find ${SCRIPT} -name '*.go' | xargs ${GOFMT}

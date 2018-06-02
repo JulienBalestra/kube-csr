@@ -8,29 +8,36 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/JulienBalestra/kube-csr/pkg/generate"
+	"github.com/JulienBalestra/kube-csr/pkg/operation/generate"
 	"github.com/JulienBalestra/kube-csr/pkg/utils/kubeclient"
 )
 
-type Submit struct {
-	Override       bool
-	Approve        bool
-	KubeConfigPath string
-
-	kube *kubeclient.KubeClient
+type Config struct {
+	Override bool
 }
 
-func (s *Submit) Submit(csr *generate.CSRConfig) error {
-	s.kube = kubeclient.NewKubeClient(s.KubeConfigPath)
-	err := s.kube.Build()
-	if err != nil {
-		return err
-	}
+type Submit struct {
+	conf *Config
 
+	kubeClient *kubeclient.KubeClient
+}
+
+func NewSubmitter(kubeConfigPath string, conf *Config) (*Submit, error) {
+	k, err := kubeclient.NewKubeClient(kubeConfigPath)
+	if err != nil {
+		return nil, err
+	}
+	return &Submit{
+		kubeClient: k,
+		conf:       conf,
+	}, nil
+}
+
+func (s *Submit) Submit(csr *generate.Config) (*certificates.CertificateSigningRequest, error) {
 	csrBytes, err := ioutil.ReadFile(csr.CSRABSPath)
 	if err != nil {
 		glog.Errorf("Cannot read CSR from file: %v", err)
-		return err
+		return nil, err
 	}
 	csrString := string(csrBytes)
 	glog.V(3).Infof("Creating csr/%s:\n%s", csr.Name, csrString)
@@ -54,49 +61,29 @@ func (s *Submit) Submit(csr *generate.CSRConfig) error {
 		},
 	}
 
-	r, err := s.kube.GetCertificateClient().CertificateSigningRequests().Create(kubeCSR)
+	r, err := s.kubeClient.GetCertificateClient().CertificateSigningRequests().Create(kubeCSR)
 	if err != nil {
 		if !errors.IsAlreadyExists(err) {
 			glog.Errorf("Unexpected error during the creation of the CSR: %v", err)
-			return err
+			return nil, err
 		}
-		if !s.Override {
+		if !s.conf.Override {
 			glog.Errorf("csr/%s already exists, use override or delete it before", csr.Name)
-			return err
+			return nil, err
 		}
 		glog.Warningf("csr/%s already exists, deleting ...", csr.Name)
-		err = s.kube.GetCertificateClient().CertificateSigningRequests().Delete(kubeCSR.Name, nil)
+		err = s.kubeClient.GetCertificateClient().CertificateSigningRequests().Delete(kubeCSR.Name, nil)
 		if err != nil {
 			glog.Errorf("Cannot delete csr/%s: %v", csr.Name, err)
-			return err
+			return nil, err
 		}
 		glog.V(2).Infof("Successfully deleted csr/%s, re-creating ...", csr.Name)
-		r, err = s.kube.GetCertificateClient().CertificateSigningRequests().Create(kubeCSR)
+		r, err = s.kubeClient.GetCertificateClient().CertificateSigningRequests().Create(kubeCSR)
 		if err != nil {
 			glog.Errorf("Unexpected error during the creation of the csr/%s: %v", csr.Name, err)
-			return err
+			return nil, err
 		}
 	}
-	glog.V(2).Infof("Successfully created csr/%s", csr.Name)
-	if s.Approve {
-		return s.approve(r)
-	}
-	return nil
-}
-
-func (s *Submit) approve(r *certificates.CertificateSigningRequest) error {
-	glog.V(2).Infof("Approving csr/%s ...", r.Name)
-	r.Status.Conditions = append(r.Status.Conditions, certificates.CertificateSigningRequestCondition{
-		Type:    certificates.CertificateApproved,
-		Reason:  "kubeCSRApprove",
-		Message: "This CSR was approved by kube-csr",
-	})
-	r, err := s.kube.GetCertificateClient().CertificateSigningRequests().UpdateApproval(r)
-	if err != nil {
-		glog.Errorf("Unexpected error during approval of the CSR: %v", err)
-		return err
-	}
-	glog.V(2).Infof("csr/%s is approved", r.Name)
-	// TODO propose to generate an kubernetes event
-	return nil
+	glog.V(2).Infof("Successfully created csr/%s %s", r.Name, r.UID)
+	return r, nil
 }

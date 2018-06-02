@@ -10,9 +10,11 @@ import (
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
 
-	"github.com/JulienBalestra/kube-csr/pkg/fetch"
-	"github.com/JulienBalestra/kube-csr/pkg/generate"
-	"github.com/JulienBalestra/kube-csr/pkg/submit"
+	"github.com/JulienBalestra/kube-csr/pkg/operation"
+	"github.com/JulienBalestra/kube-csr/pkg/operation/approve"
+	"github.com/JulienBalestra/kube-csr/pkg/operation/fetch"
+	"github.com/JulienBalestra/kube-csr/pkg/operation/generate"
+	"github.com/JulienBalestra/kube-csr/pkg/operation/submit"
 )
 
 const programName = "kube-csr"
@@ -51,47 +53,68 @@ func NewCommand() (*cobra.Command, *int) {
 %s my-app -gsaf --override --kubeconfig-path ~/.kube/config
 `, programName, programName, programName, programName, programName, programName, programName, programName),
 		Run: func(cmd *cobra.Command, args []string) {
-			if !viperConfig.GetBool("generate") && !viperConfig.GetBool("approve") && !viperConfig.GetBool("fetch") {
-				glog.Errorf("Must choose at least one flag: --generate, --approve, --fetch")
+			if !viperConfig.GetBool("generate") &&
+				!viperConfig.GetBool("submit") &&
+				!viperConfig.GetBool("approve") &&
+				!viperConfig.GetBool("fetch") {
+				glog.Errorf("Must choose at least one flag: --generate, --submit, --approve, --fetch")
 				exitCode = 1
 				return
 			}
-			csrConfig, err := newCertificateSigningRequest(args[0])
+			// build common name and csr name
+			commonName := args[0]
+			csrName, err := generateCertificateSigningRequestName(commonName)
 			if err != nil {
-				glog.Errorf("Command returns error: %v", err)
-				exitCode = 2
+				exitCode = 1
 				return
 			}
+
+			csrConfig, err := newCSRConfig(commonName, csrName)
+			if err != nil {
+				exitCode = 1
+				return
+			}
+			var generator *generate.Generator
+			var submitter *submit.Submit
+			var approval *approve.Approval
+			var fetcher *fetch.Fetch
+
 			if viperConfig.GetBool("generate") {
-				err = csrConfig.Generate()
+				generator = generate.NewGenerator(csrConfig)
+			}
+			if viperConfig.GetBool("submit") {
+				submitter, err = newSubmitClient()
 				if err != nil {
-					glog.Errorf("Command returns error: %v", err)
-					exitCode = 2
+					exitCode = 1
 					return
 				}
 			}
-			if viperConfig.GetBool("submit") {
-				aClient := newApprovalClient()
-				err := aClient.Submit(csrConfig)
+			if viperConfig.GetBool("approve") {
+				approval, err = newApproveClient()
 				if err != nil {
-					glog.Errorf("Command returns error: %v", err)
-					exitCode = 2
+					exitCode = 1
 					return
 				}
 			}
 			if viperConfig.GetBool("fetch") {
-				fClient, err := newFetchClient()
+				fetcher, err = newFetchClient()
 				if err != nil {
-					glog.Errorf("Command returns error: %v", err)
-					exitCode = 2
+					exitCode = 1
 					return
 				}
-				err = fClient.Fetch(csrConfig)
-				if err != nil {
-					glog.Errorf("Command returns error: %v", err)
-					exitCode = 2
-					return
-				}
+			}
+			err = operation.NewOperation(
+				&operation.Config{
+					SourceConfig: csrConfig,
+					Generate:     generator,
+					Submit:       submitter,
+					Approve:      approval,
+					Fetch:        fetcher,
+				},
+			).Run()
+			if err != nil {
+				exitCode = 2
+				return
 			}
 		},
 	}
@@ -152,19 +175,30 @@ func NewCommand() (*cobra.Command, *int) {
 	return rootCommand, &exitCode
 }
 
-func newCertificateSigningRequest(commonName string) (*generate.CSRConfig, error) {
+func generateCertificateSigningRequestName(commonName string) (string, error) {
+	csrName := viperConfig.GetString("csr-name")
+	if csrName != "" {
+		return csrName, nil
+	}
+
+	hostname := viperConfig.GetString("hostname")
+	if hostname != "" {
+		return fmt.Sprintf("%s-%s", commonName, hostname), nil
+	}
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		glog.Errorf("Cannot get hostname: %v", err)
+		return "", err
+	}
+	return fmt.Sprintf("%s-%s", commonName, hostname), nil
+}
+
+func newCSRConfig(commonName, csrName string) (*generate.Config, error) {
 	wd, err := os.Getwd()
 	if err != nil {
 		glog.Errorf("Unexpected error: %v", err)
 		return nil, err
-	}
-	hostname := viperConfig.GetString("hostname")
-	if hostname == "" {
-		hostname, err = os.Hostname()
-		if err != nil {
-			glog.Errorf("Cannot get hostname: %v", err)
-			return nil, err
-		}
 	}
 
 	privateKeyPath := viperConfig.GetString("private-key-file")
@@ -176,12 +210,7 @@ func newCertificateSigningRequest(commonName string) (*generate.CSRConfig, error
 	if !path.IsAbs(csrPath) {
 		csrPath = path.Join(wd, csrPath)
 	}
-
-	csrName := viperConfig.GetString("csr-name")
-	if csrName == "" {
-		csrName = fmt.Sprintf("%s-%s", commonName, hostname)
-	}
-	return &generate.CSRConfig{
+	return &generate.Config{
 		Name:       csrName,
 		Override:   viperConfig.GetBool("override"),
 		CommonName: commonName,
@@ -196,12 +225,25 @@ func newCertificateSigningRequest(commonName string) (*generate.CSRConfig, error
 	}, nil
 }
 
-func newApprovalClient() *submit.Submit {
-	return &submit.Submit{
-		KubeConfigPath: viperConfig.GetString("kubeconfig-path"),
-		Override:       viperConfig.GetBool("override"),
-		Approve:        viperConfig.GetBool("approve"),
+func newSubmitClient() (*submit.Submit, error) {
+	s, err := submit.NewSubmitter(
+		viperConfig.GetString("kubeconfig-path"),
+		&submit.Config{
+			Override: viperConfig.GetBool("override"),
+		},
+	)
+	if err != nil {
+		return nil, err
 	}
+	return s, nil
+}
+
+func newApproveClient() (*approve.Approval, error) {
+	s, err := approve.NewApproval(viperConfig.GetString("kubeconfig-path"))
+	if err != nil {
+		return nil, err
+	}
+	return s, nil
 }
 
 func newFetchClient() (*fetch.Fetch, error) {
@@ -217,17 +259,23 @@ func newFetchClient() (*fetch.Fetch, error) {
 	}
 
 	fetchInterval := viperConfig.GetDuration("fetch-interval")
+	timeoutInterval := viperConfig.GetDuration("fetch-timeout")
 	if !viperConfig.GetBool("approve") {
 		fetchInterval = defaultFetchInterval * 10
-		glog.V(2).Infof("csr externally approved, setting the polling interval to %s", fetchInterval.String())
+		timeoutInterval = defaultTimeoutInterval * 10
+		glog.V(2).Infof("csr externally approved, setting the polling interval to %s and the timeout to %s", fetchInterval.String(), timeoutInterval.String())
 	}
 
-	return &fetch.Fetch{
-		KubeConfigPath:        viperConfig.GetString("kubeconfig-path"),
+	conf := &fetch.Config{
 		Override:              viperConfig.GetBool("override"),
 		PollingInterval:       fetchInterval,
-		PollingTimeout:        viperConfig.GetDuration("fetch-timeout"),
-		CertificateABSPath:    crtPath,
+		PollingTimeout:        timeoutInterval,
 		CertificatePermission: os.FileMode(viperConfig.GetInt("certificate-perm")),
-	}, nil
+		CertificateABSPath:    crtPath,
+	}
+	f, err := fetch.NewFetcher(viperConfig.GetString("kubeconfig-path"), conf)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
 }
