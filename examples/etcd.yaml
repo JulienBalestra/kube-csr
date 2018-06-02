@@ -46,7 +46,7 @@ spec:
     matchLabels:
       app: etcd
   serviceName: etcd
-  replicas: 1
+  replicas: 3
   template:
     metadata:
       labels:
@@ -56,21 +56,26 @@ spec:
       terminationGracePeriodSeconds: 10
       initContainers:
       - name: kube-csr
-        image: quay.io/julienbalestra/kube-csr:latest
+        image: quay.io/julienbalestra/kube-csr:test
         command:
         - /usr/local/bin/kube-csr
-        - etcd
+        - $(MY_POD_NAME)
         - --generate
         - --submit
         - --approve
         - --fetch
         - --subject-alternative-names
-        - $(MY_POD_IP),$(MY_POD_NAME).etcd.svc.cluster.local,etcd.$(MY_POD_NAMESPACE).svc.cluster.local
+        - $(MY_POD_IP),$(MY_POD_NAME).etcd.$(MY_POD_NAMESPACE).svc.cluster.local,etcd.$(MY_POD_NAMESPACE).svc.cluster.local
         - --override
         - --private-key-file=/etc/certs/etcd.private_key
         - --csr-file=/etc/certs/etcd.csr
         - --certificate-file=/etc/certs/etcd.certificate
+        - --hostname=$(MY_POD_UID)
         env:
+        - name: MY_POD_UID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
         - name: MY_POD_NAME
           valueFrom:
             fieldRef:
@@ -92,22 +97,44 @@ spec:
         image: quay.io/coreos/etcd:latest
         command:
         - /usr/local/bin/etcd
+
         - --cert-file=/etc/certs/etcd.certificate
         - --key-file=/etc/certs/etcd.private_key
         - --trusted-ca-file=/run/secrets/kubernetes.io/serviceaccount/ca.crt
-        - --advertise-client-urls=https://$(MY_POD_IP):2379
-        - --listen-client-urls=https://0.0.0.0:2379
+
+        - --advertise-client-urls=https://$(MY_POD_NAME).etcd.$(MY_POD_NAMESPACE).svc.cluster.local:2379
+        - --listen-client-urls=https://$(MY_POD_IP):2379,http://127.0.0.1:2379
+        # TODO use --client-cert-auth
+
+        - --peer-cert-file=/etc/certs/etcd.certificate
+        - --peer-key-file=/etc/certs/etcd.private_key
+        - --peer-ca-file=/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        - --name=$(MY_POD_NAME)
+        - --listen-peer-urls=https://0.0.0.0:2380
+        - --initial-advertise-peer-urls=https://$(MY_POD_NAME).etcd.$(MY_POD_NAMESPACE).svc.cluster.local:2380
+        - --initial-cluster
+        - etcd-0=https://etcd-0.etcd.$(MY_POD_NAMESPACE).svc.cluster.local:2380,etcd-1=https://etcd-1.etcd.$(MY_POD_NAMESPACE).svc.cluster.local:2380,etcd-2=https://etcd-2.etcd.$(MY_POD_NAMESPACE).svc.cluster.local:2380
+        - --peer-client-cert-auth
         env:
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
         - name: MY_POD_IP
           valueFrom:
             fieldRef:
               fieldPath: status.podIP
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         ports:
         - containerPort: 2379
           name: etcd
         volumeMounts:
         - name: certs
           mountPath: /etc/certs
+      # TODO use probes
       volumes:
       - emptyDir:
         name: certs
@@ -131,6 +158,8 @@ spec:
         --endpoints=https://etcd.default.svc.cluster.local:2379 cluster-health;
         do echo '---'; sleep 2; done"
       restartPolicy: Never
+      terminationGracePeriodSeconds: 1
+      serviceAccount: etcd
 ---
 apiVersion: v1
 kind: Service
