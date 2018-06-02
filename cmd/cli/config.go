@@ -6,7 +6,8 @@ import (
 )
 
 const (
-	defaultFetchInterval = time.Second * 1
+	defaultFetchInterval   = time.Second * 1
+	defaultTimeoutInterval = defaultFetchInterval * 10
 )
 
 var viperConfig = viper.New()
@@ -38,5 +39,5 @@ func init() {
 	viperConfig.SetDefault("certificate-file", "kube-csr.certificate")
 	viperConfig.SetDefault("certificate-perm", 0600)
 	viperConfig.SetDefault("fetch-interval", defaultFetchInterval)
-	viperConfig.SetDefault("fetch-timeout", time.Second*10)
+	viperConfig.SetDefault("fetch-timeout", defaultTimeoutInterval)
 }

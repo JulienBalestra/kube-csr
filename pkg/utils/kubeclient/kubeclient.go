@@ -17,10 +17,15 @@ type KubeClient struct {
 	restConfig *rest.Config
 }
 
-func NewKubeClient(kubeconfigPath string) *KubeClient {
-	return &KubeClient{
+func NewKubeClient(kubeconfigPath string) (*KubeClient, error) {
+	c := &KubeClient{
 		KubeConfigPath: kubeconfigPath,
 	}
+	err := c.build()
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
 }
 
 func (k *KubeClient) buildInClusterConfig() error {
@@ -45,7 +50,7 @@ func (k *KubeClient) buildFlagsConfig() error {
 	return nil
 }
 
-func (k *KubeClient) Build() error {
+func (k *KubeClient) build() error {
 	kubeConfigFn := k.buildFlagsConfig
 	if k.KubeConfigPath == "" {
 		kubeConfigFn = k.buildInClusterConfig

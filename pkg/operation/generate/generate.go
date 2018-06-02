@@ -20,7 +20,7 @@ const (
 	csrType           = "CERTIFICATE REQUEST"
 )
 
-type CSRConfig struct {
+type Config struct {
 	Name     string
 	Override bool
 
@@ -34,12 +34,22 @@ type CSRConfig struct {
 	CSRPermission        os.FileMode
 }
 
-func (c *CSRConfig) categorizeHosts() ([]string, []net.IP, error) {
+type Generator struct {
+	conf *Config
+}
+
+func NewGenerator(conf *Config) *Generator {
+	return &Generator{
+		conf: conf,
+	}
+}
+
+func (g *Generator) categorizeHosts() ([]string, []net.IP, error) {
 	var dnsNames []string
 	var ipAddresses []net.IP
 	var invalidHosts []string
 
-	for _, host := range c.Hosts {
+	for _, host := range g.conf.Hosts {
 		ip := net.ParseIP(host)
 		if ip != nil {
 			ipAddresses = append(ipAddresses, ip)
@@ -61,27 +71,27 @@ func (c *CSRConfig) categorizeHosts() ([]string, []net.IP, error) {
 	return dnsNames, ipAddresses, nil
 }
 
-func (c *CSRConfig) generateCryptoData() ([]byte, []byte, error) {
-	privateKey, err := rsa.GenerateKey(rand.Reader, c.RSABits)
+func (g *Generator) generateCryptoData() ([]byte, []byte, error) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, g.conf.RSABits)
 	if err != nil {
 		glog.Errorf("Unexpected error during the RSA Key generation: %v", err)
 		return nil, nil, err
 	}
 	privKeyBytes := x509.MarshalPKCS1PrivateKey(privateKey)
 
-	if c.CommonName == "" {
+	if g.conf.CommonName == "" {
 		glog.Errorf("Invalid empty CommonName")
 		return nil, nil, fmt.Errorf("empty CommonName")
 	}
 
-	dnsNames, ipAddresses, err := c.categorizeHosts()
+	dnsNames, ipAddresses, err := g.categorizeHosts()
 	if err != nil {
 		return nil, nil, err
 	}
-
+	glog.V(2).Infof("Generating CSR with CN=%s", g.conf.CommonName)
 	csrTemplate := x509.CertificateRequest{
 		Subject: pkix.Name{
-			CommonName: c.CommonName,
+			CommonName: g.conf.CommonName,
 		},
 		SignatureAlgorithm: x509.SHA256WithRSA,
 		DNSNames:           dnsNames,
@@ -96,20 +106,20 @@ func (c *CSRConfig) generateCryptoData() ([]byte, []byte, error) {
 	return privKeyBytes, csrBytes, nil
 }
 
-func (c *CSRConfig) Generate() error {
+func (g *Generator) Generate() error {
 	// crypto data
-	privKeyBytes, csrBytes, err := c.generateCryptoData()
+	privKeyBytes, csrBytes, err := g.generateCryptoData()
 	if err != nil {
 		glog.Errorf("Cannot generate crypto data: %v", err)
 		return err
 	}
 
 	// write to FS
-	err = pemio.WritePem(privKeyBytes, rsaPrivateKeyType, c.PrivateKeyABSPath, c.PrivateKeyPermission, c.Override)
+	err = pemio.WritePem(privKeyBytes, rsaPrivateKeyType, g.conf.PrivateKeyABSPath, g.conf.PrivateKeyPermission, g.conf.Override)
 	if err != nil {
 		return err
 	}
-	err = pemio.WritePem(csrBytes, csrType, c.CSRABSPath, c.CSRPermission, c.Override)
+	err = pemio.WritePem(csrBytes, csrType, g.conf.CSRABSPath, g.conf.CSRPermission, g.conf.Override)
 	if err != nil {
 		return err
 	}

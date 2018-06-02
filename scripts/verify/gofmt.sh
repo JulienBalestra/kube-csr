@@ -26,6 +26,7 @@ cd $(dirname "$0}")/../..
 find_files() {
   find pkg -name '*.go'
   find cmd -name '*.go'
+  find examples -name '*.go'
   find scripts -name '*.go'
 }
 
