@@ -13,29 +13,31 @@ But you can also choose to skip some steps like:
 * <s>approve the submitted CSR</s>
 * fetch the generated **externally approved** certificate
 
-The `--override` flag allows to delete and re-submit an already submitted CSR.
+
+## Command line
 
 Command line example:
 ```text
 $ ./kube-csr etcd --generate --submit --approve --fetch --subject-alternative-names 192.168.1.1,etcd-0.default.svc.cluster.local --kubeconfig-path ~/.kube/config
- 
-I0527 19:39:29.542878   30219 csr.go:47] Added IP address 192.168.1.1
-I0527 19:39:29.543072   30219 csr.go:52] Added DNS name etcd-0.default.svc.cluster.local
-I0527 19:39:29.543078   30219 csr.go:61] CSR with 1 DNS names and 1 IP addresses
-I0527 19:39:29.545655   30219 write.go:54] Wrote RSA PRIVATE KEY to /home/jb/go/src/github.com/JulienBalestra/kube-csr/kube-csr.private_key
-I0527 19:39:29.545690   30219 write.go:54] Wrote CERTIFICATE REQUEST to /home/jb/go/src/github.com/JulienBalestra/kube-csr/kube-csr.csr
-I0527 19:39:29.545713   30219 kubeclient.go:38] Building flags kube-config with /home/jb/.kube/config
-I0527 19:39:29.559138   30219 submit.go:80] Successfully created csr/etcd-haf
-I0527 19:39:29.559154   30219 submit.go:88] Approving csr/etcd-haf ...
-I0527 19:39:29.562221   30219 submit.go:99] csr/etcd-haf is approved
-I0527 19:39:29.562262   30219 kubeclient.go:38] Building flags kube-config with /home/jb/.kube/config
-I0527 19:39:29.562837   30219 fetch.go:37] Start polling for certificate of csr/etcd-haf, every 1s, timeout after 10s
-I0527 19:39:30.565534   30219 fetch.go:60] Certificate successfully fetched, writing 1216 chars to /home/jb/go/src/github.com/JulienBalestra/kube-csr/kube-csr.certificate
+
+I0602 22:48:12.880405    5241 generate.go:56] Added IP address 192.168.1.1
+I0602 22:48:12.880429    5241 generate.go:61] Added DNS name etcd-0.default.svc.cluster.local
+I0602 22:48:12.880433    5241 generate.go:70] CSR with 1 DNS names and 1 IP addresses
+I0602 22:48:12.880439    5241 generate.go:91] Generating CSR with CN=etcd
+I0602 22:48:12.883018    5241 write.go:54] Wrote RSA PRIVATE KEY to /home/jb/go/src/github.com/JulienBalestra/kube-csr/kube-csr.private_key
+I0602 22:48:12.883069    5241 write.go:54] Wrote CERTIFICATE REQUEST to /home/jb/go/src/github.com/JulienBalestra/kube-csr/kube-csr.csr
+I0602 22:48:12.893741    5241 submit.go:87] Successfully created csr/etcd-haf 4428adb4-66a6-11e8-94af-5404a66983a9
+I0602 22:48:12.893759    5241 approve.go:34] Approving csr/etcd-haf ...
+I0602 22:48:12.895857    5241 approve.go:45] csr/etcd-haf is approved
+I0602 22:48:12.895953    5241 fetch.go:43] Start polling for certificate of csr/etcd-haf, every 1s, timeout after 10s
+I0602 22:48:13.898763    5241 fetch.go:66] Certificate successfully fetched, writing 1216 chars to /home/jb/go/src/github.com/JulienBalestra/kube-csr/kube-csr.certificate
 ```
+
+The `--override` flag allows to delete and re-submit an already submitted CSR.
 
 To get the following files:
 ```text
-kube-csr.certificate  kube-csr.csr  kube-csr.private_key
+kube-csr.certificate kube-csr.csr kube-csr.private_key
 ```
 
 ```text
@@ -45,12 +47,12 @@ Certificate:
     Data:
         Version: 3 (0x2)
         Serial Number:
-            03:56:10:1b:4f:ce:42:3d:40:ab:e4:30:be:41:42:2a:a3:10:4e:5f
+            64:d5:5d:ab:0a:c3:0a:77:b0:06:63:79:79:aa:02:e6:44:f6:62:3a
     Signature Algorithm: sha256WithRSAEncryption
         Issuer: CN = p8s
         Validity
-            Not Before: May 27 17:42:00 2018 GMT
-            Not After : May 27 17:42:00 2019 GMT
+            Not Before: Jun  2 20:43:00 2018 GMT
+            Not After : Jun  2 20:43:00 2019 GMT
         Subject: CN = etcd
         Subject Public Key Info:
             Public Key Algorithm: rsaEncryption
@@ -66,13 +68,12 @@ Certificate:
             X509v3 Basic Constraints: critical
                 CA:FALSE
             X509v3 Subject Key Identifier: 
-                F2:BC:3E:83:30:3D:92:55:35:A4:88:48:97:1D:3F:AA:CF:DA:E2:F4
+                F8:EB:0A:05:83:34:D1:9D:1E:D8:C0:A7:84:3F:0F:01:AE:DD:83:95
             X509v3 Authority Key Identifier: 
-                keyid:4C:10:E2:7D:3A:22:EC:5A:34:54:69:8C:83:F9:20:22:7E:12:AF:38
+                keyid:5C:FE:53:BB:CE:6E:42:49:2E:89:60:AF:9A:D0:45:73:57:AF:7D:43
 
             X509v3 Subject Alternative Name: 
                 DNS:etcd-0.default.svc.cluster.local, IP Address:192.168.1.1
-    Signature Algorithm: sha256WithRSAEncryption
          [...]
 
 ```
@@ -81,8 +82,7 @@ Observe in the controller-manager logs:
 ```text
 $ kubectl logs po/kube-controller-manager -n kube-system
 
-[...]
-I0527 17:47:07.118840       1 logs.go:49] [INFO] signed certificate with serial number 19046239489823935503989490272030062933187776095
+[INFO] signed certificate with serial number [...]
 ```
 
 Have a look the the command line documentation [here](docs/kube-csr.md)
@@ -108,14 +108,14 @@ kube-system   kube-scheduler   1         1         1         1            1     
 
 NAMESPACE     NAME                       READY     STATUS    RESTARTS   AGE
 kube-system   coredns-747dbcf5df-zllhm   1/1       Running   0          1m
-kube-system   kube-apiserver-v1704       1/1       Running   0          9s
+kube-system   kube-apiserver-haf         1/1       Running   0          9s
 kube-system   kube-controller-manager    1/1       Running   0          1m
 kube-system   kube-proxy-2z9vw           1/1       Running   0          1m
 kube-system   kube-scheduler-v8lwc       1/1       Running   0          1m
 
 ``` 
 
-Deployment:
+Apply the manifests:
 ```text
 $ kubectl apply -f examples/etcd.yaml 
 
@@ -129,62 +129,54 @@ service "etcd" created
 
 Produce:
 ```text
-$ kubectl get po,csr
+$ kubectl get csr,po --show-all
+
+NAME                                              AGE       REQUESTOR                            CONDITION
+etcd-0-b5722b13-66a1-11e8-94af-5404a66983a9   36m       system:serviceaccount:default:etcd   Approved,Issued
+etcd-1-b87e7bc2-66a1-11e8-94af-5404a66983a9   36m       system:serviceaccount:default:etcd   Approved,Issued
+etcd-2-bbac1ba4-66a1-11e8-94af-5404a66983a9   36m       system:serviceaccount:default:etcd   Approved,Issued
+
 
 NAME            READY     STATUS      RESTARTS   AGE
-etcd-0          1/1       Running     0          3m
-etcdctl-fbcdj   0/1       Completed   0          3m
-
-NAME          AGE       REQUESTOR                            CONDITION
-etcd-etcd-0   3m        system:serviceaccount:default:etcd   Approved,Issued
+etcd-0          1/1       Running     0          35m
+etcd-1          1/1       Running     0          35m
+etcd-2          1/1       Running     0          35m
+etcdctl-hkp25   0/1       Completed   0          35m
 ```
 
 Observe in detail the init container of etcd-0:
 ```text
 $ kubectl logs etcd-0 kube-csr
 
-I0529 09:08:14.553994       1 csr.go:46] Added IP address 172.17.0.3
-I0529 09:08:14.554551       1 csr.go:51] Added DNS name etcd-0.etcd.svc.cluster.local
-I0529 09:08:14.554602       1 csr.go:51] Added DNS name etcd.default.svc.cluster.local
-I0529 09:08:14.554637       1 csr.go:60] CSR with 2 DNS names and 1 IP addresses
-I0529 09:08:14.557671       1 write.go:54] Wrote RSA PRIVATE KEY to /etc/certs/etcd.private_key
-I0529 09:08:14.557793       1 write.go:54] Wrote CERTIFICATE REQUEST to /etc/certs/etcd.csr
-I0529 09:08:14.557844       1 kubeclient.go:27] Building inCluster kube-config
-I0529 09:08:14.570322       1 submit.go:80] Successfully created csr/etcd-etcd-0
-I0529 09:08:14.570422       1 submit.go:88] Approving csr/etcd-etcd-0 ...
-I0529 09:08:14.573511       1 submit.go:99] csr/etcd-etcd-0 is approved
-I0529 09:08:14.573612       1 kubeclient.go:27] Building inCluster kube-config
-I0529 09:08:14.573865       1 fetch.go:37] Start polling for certificate of csr/etcd-etcd-0, every 1s, timeout after 10s
-I0529 09:08:15.580527       1 fetch.go:60] Certificate successfully fetched, writing 1257 chars to /etc/certs/etcd.certificate
-```
-
-Confirm the etcd is running:
-```text
-$ kubectl logs etcd-0
-
-[...]
-2018-05-29 09:08:18.938102 I | embed: listening for peers on http://localhost:2380
-2018-05-29 09:08:18.938182 I | embed: listening for client requests on 0.0.0.0:2379
-[...]
-2018-05-29 09:08:18.961374 I | etcdserver: advertise client URLs = https://172.17.0.3:2379
-2018-05-29 09:08:18.961379 I | etcdserver: initial advertise peer URLs = http://localhost:2380
-2018-05-29 09:08:18.961387 I | etcdserver: initial cluster = default=http://localhost:2380
-[...]
-2018-05-29 09:08:18.994836 I | embed: ClientTLS: cert = /etc/certs/etcd.certificate, key = /etc/certs/etcd.private_key, ca = , trusted-ca = /run/secrets/kubernetes.io/serviceaccount/ca.crt, client-cert-auth = false, crl-file = 
-[...]
-2018-05-29 09:08:19.474273 I | etcdserver: published {Name:default ClientURLs:[https://172.17.0.3:2379]} to cluster cdf818194e3a8c32
-2018-05-29 09:08:19.474295 I | embed: ready to serve client requests
-2018-05-29 09:08:19.478965 I | embed: serving client requests on [::]:2379
+I0602 20:15:36.844699       1 generate.go:56] Added IP address 172.17.0.3
+I0602 20:15:36.845018       1 generate.go:61] Added DNS name etcd-0.etcd.default.svc.cluster.local
+I0602 20:15:36.845025       1 generate.go:61] Added DNS name etcd.default.svc.cluster.local
+I0602 20:15:36.845029       1 generate.go:70] CSR with 2 DNS names and 1 IP addresses
+I0602 20:15:36.845033       1 generate.go:91] Generating CSR with CN=etcd-0
+I0602 20:15:36.847608       1 write.go:54] Wrote RSA PRIVATE KEY to /etc/certs/etcd.private_key
+I0602 20:15:36.847657       1 write.go:54] Wrote CERTIFICATE REQUEST to /etc/certs/etcd.csr
+I0602 20:15:36.857854       1 submit.go:88] Successfully created csr/etcd-0-b5722b13-66a1-11e8-94af-5404a66983a9 b6453f62-66a1-11e8-94af-5404a66983a9
+I0602 20:15:36.857873       1 approve.go:34] Approving csr/etcd-0-b5722b13-66a1-11e8-94af-5404a66983a9 ...
+I0602 20:15:36.860071       1 approve.go:45] csr/etcd-0-b5722b13-66a1-11e8-94af-5404a66983a9 is approved
+I0602 20:15:36.860089       1 fetch.go:43] Start polling for certificate of csr/etcd-0-b5722b13-66a1-11e8-94af-5404a66983a9, every 1s, timeout after 10s
+I0602 20:15:37.862585       1 fetch.go:66] Certificate successfully fetched, writing 1241 chars to /etc/certs/etcd.certificate
 ```
 
 See the output of the completed Job:
 ```text
-$ kubectl logs etcdctl-fbcdj
+$ kubectl logs etcdctl-${ID}
 
-cluster may be unhealthy: failed to list members
-Error:  client: etcd cluster is unavailable or misconfigured; error #0: client: endpoint https://etcd.default.svc.cluster.local:2379 exceeded header timeout
-error #0: client: endpoint https://etcd.default.svc.cluster.local:2379 exceeded header timeout
----
-member 8e9e05c52164694d is healthy: got healthy result from https://172.17.0.3:2379
+[...]
+member 6c254b8f2d60eb6a is healthy: got healthy result from https://etcd-2.etcd.default.svc.cluster.local:2379
+member 6ca04f5d282b7cd5 is healthy: got healthy result from https://etcd-0.etcd.default.svc.cluster.local:2379
+member 891a4cb0531d4224 is healthy: got healthy result from https://etcd-1.etcd.default.svc.cluster.local:2379
 cluster is healthy
+```
+
+## Library
+
+Please see an example to use *kube-csr* as library [here](examples/example.go)
+
+```bash
+go get github.com/JulienBalestra/kube-csr
 ```
