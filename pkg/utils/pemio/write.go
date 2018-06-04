@@ -9,6 +9,7 @@ import (
 	"github.com/golang/glog"
 )
 
+// WriteFile write the passed bytes to the created file. Override allows to truncate the existing file
 func WriteFile(b []byte, absPath string, perm os.FileMode, override bool) error {
 	_, err := os.Stat(absPath)
 	if err == nil {
@@ -29,6 +30,8 @@ func WriteFile(b []byte, absPath string, perm os.FileMode, override bool) error 
 	return fdW.Flush()
 }
 
+// WritePem write the passed pemBlock bytes to the created file. pemType represents the HEADER of the pem file.
+// Override allows to truncate the existing file
 func WritePem(b []byte, pemType string, absPath string, perm os.FileMode, override bool) error {
 	glog.V(3).Infof("Creating file %s for %s", absPath, pemType)
 	_, err := os.Stat(absPath)

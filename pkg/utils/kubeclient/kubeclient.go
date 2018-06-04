@@ -17,9 +17,10 @@ type KubeClient struct {
 	restConfig *rest.Config
 }
 
-func NewKubeClient(kubeconfigPath string) (*KubeClient, error) {
+// NewKubeClient instanciate a new Kubernetes client, pass kubeConfigPath == "" to build an InCluster client
+func NewKubeClient(kubeConfigPath string) (*KubeClient, error) {
 	c := &KubeClient{
-		KubeConfigPath: kubeconfigPath,
+		KubeConfigPath: kubeConfigPath,
 	}
 	err := c.build()
 	if err != nil {
@@ -29,7 +30,7 @@ func NewKubeClient(kubeconfigPath string) (*KubeClient, error) {
 }
 
 func (k *KubeClient) buildInClusterConfig() error {
-	glog.V(2).Infof("Building inCluster kube-config")
+	glog.V(3).Infof("Building inCluster kube-config")
 	kubeConfig, err := rest.InClusterConfig()
 	if err != nil {
 		glog.Errorf("Fail to build inCluster config: %v", err)
@@ -59,7 +60,7 @@ func (k *KubeClient) build() error {
 	if err != nil {
 		return err
 	}
-	k.restConfig.Timeout = time.Second * 3
+	k.restConfig.Timeout = time.Second * 3 // TODO conf this
 	k.certClient, err = certapi.NewForConfig(k.restConfig)
 	if err != nil {
 		glog.Errorf("Cannot create certificate client: %v", err)
@@ -68,6 +69,7 @@ func (k *KubeClient) build() error {
 	return nil
 }
 
+// GetCertificateClient returns the k8s object to work with the certificates API
 func (k *KubeClient) GetCertificateClient() *certapi.CertificatesV1beta1Client {
 	return k.certClient
 }

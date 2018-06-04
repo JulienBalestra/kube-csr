@@ -1,4 +1,4 @@
-# Kubernetes Certificate Signing Request 
+# Kubernetes Certificate Signing Request [![CircleCI](https://circleci.com/gh/JulienBalestra/kube-csr.svg?style=svg)](https://circleci.com/gh/JulienBalestra/kube-csr)
 
 All in one:
 * generate a Certificate Signing Request (CSR)
@@ -44,38 +44,10 @@ kube-csr.certificate kube-csr.csr kube-csr.private_key
 $ openssl x509 -in kube-csr.certificate -text -noout
 
 Certificate:
-    Data:
-        Version: 3 (0x2)
-        Serial Number:
-            64:d5:5d:ab:0a:c3:0a:77:b0:06:63:79:79:aa:02:e6:44:f6:62:3a
-    Signature Algorithm: sha256WithRSAEncryption
         Issuer: CN = p8s
-        Validity
-            Not Before: Jun  2 20:43:00 2018 GMT
-            Not After : Jun  2 20:43:00 2019 GMT
         Subject: CN = etcd
-        Subject Public Key Info:
-            Public Key Algorithm: rsaEncryption
-                Public-Key: (2048 bit)
-                Modulus:
-                    [...]
-                Exponent: 65537 (0x10001)
-        X509v3 extensions:
-            X509v3 Key Usage: critical
-                Digital Signature, Key Encipherment
-            X509v3 Extended Key Usage: 
-                TLS Web Server Authentication
-            X509v3 Basic Constraints: critical
-                CA:FALSE
-            X509v3 Subject Key Identifier: 
-                F8:EB:0A:05:83:34:D1:9D:1E:D8:C0:A7:84:3F:0F:01:AE:DD:83:95
-            X509v3 Authority Key Identifier: 
-                keyid:5C:FE:53:BB:CE:6E:42:49:2E:89:60:AF:9A:D0:45:73:57:AF:7D:43
-
             X509v3 Subject Alternative Name: 
                 DNS:etcd-0.default.svc.cluster.local, IP Address:192.168.1.1
-         [...]
-
 ```
 
 Observe in the controller-manager logs:
@@ -86,6 +58,8 @@ $ kubectl logs po/kube-controller-manager -n kube-system
 ```
 
 Have a look the the command line documentation [here](docs/kube-csr.md)
+
+The current Kubernetes setup is deployed with [pupernetes](https://github.com/DataDog/pupernetes)
 
 ### In cluster
 
@@ -112,7 +86,6 @@ kube-system   kube-apiserver-haf         1/1       Running   0          9s
 kube-system   kube-controller-manager    1/1       Running   0          1m
 kube-system   kube-proxy-2z9vw           1/1       Running   0          1m
 kube-system   kube-scheduler-v8lwc       1/1       Running   0          1m
-
 ``` 
 
 Apply the manifests:
@@ -144,7 +117,7 @@ etcd-2          1/1       Running     0          35m
 etcdctl-hkp25   0/1       Completed   0          35m
 ```
 
-Observe in detail the init container of etcd-0:
+Observe the logs of the init container kube-csr:
 ```text
 $ kubectl logs etcd-0 kube-csr
 
