@@ -54,8 +54,10 @@ func (s *Submit) Submit(csr *generate.Config) (*certificates.CertificateSigningR
 			Request: csrBytes,
 			Groups:  []string{"system:authenticated"},
 			Usages: []certificates.KeyUsage{
-				certificates.UsageAny,
-				// TODO conf this
+				certificates.UsageDigitalSignature,
+				certificates.UsageKeyEncipherment,
+				certificates.UsageServerAuth,
+				certificates.UsageClientAuth,
 			},
 		},
 	}
