@@ -20,6 +20,12 @@ type Operation struct {
 	*Config
 }
 
+// NewOperation instanciate an Operation to potentially
+// - generate
+// - submit
+// - approve
+// - fetch
+// certificates through the kubernetes API.
 func NewOperation(conf *Config) *Operation {
 	return &Operation{
 		conf,
@@ -42,6 +48,7 @@ func (o *Operation) submit() error {
 	return nil
 }
 
+// Run executes all the configured operations
 func (o *Operation) Run() error {
 	if o.Generate != nil {
 		err := o.Generate.Generate()

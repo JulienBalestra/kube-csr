@@ -12,16 +12,20 @@ import (
 	"github.com/JulienBalestra/kube-csr/pkg/utils/kubeclient"
 )
 
+// Config contains
+// - Override: allows to replace any existing csr with the same name
 type Config struct {
 	Override bool
 }
 
+// Submit is created with NewSubmitter
 type Submit struct {
 	conf *Config
 
 	kubeClient *kubeclient.KubeClient
 }
 
+// NewSubmitter is a Kubernetes client to create/apply csr
 func NewSubmitter(kubeConfigPath string, conf *Config) (*Submit, error) {
 	k, err := kubeclient.NewKubeClient(kubeConfigPath)
 	if err != nil {
@@ -33,6 +37,7 @@ func NewSubmitter(kubeConfigPath string, conf *Config) (*Submit, error) {
 	}, nil
 }
 
+// Submit is equivalent to kubectl create ${CSR}, if the override is configured, it becomes kubectl apply ${CSR}
 func (s *Submit) Submit(csr *generate.Config) (*certificates.CertificateSigningRequest, error) {
 	csrBytes, err := ioutil.ReadFile(csr.CSRABSPath)
 	if err != nil {
@@ -44,7 +49,7 @@ func (s *Submit) Submit(csr *generate.Config) (*certificates.CertificateSigningR
 
 	kubeCSR := &certificates.CertificateSigningRequest{
 		TypeMeta: v1.TypeMeta{
-			APIVersion: "certificates.k8s.io/v1beta1",
+			APIVersion: "certificates.k8s.io/v1beta1", // TODO detect this
 			Kind:       "CertificateSigningRequest",
 		},
 		ObjectMeta: v1.ObjectMeta{
