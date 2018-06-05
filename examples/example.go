@@ -44,6 +44,9 @@ func main() {
 		CertificateABSPath:    "/tmp/foo.certificate",
 		CertificatePermission: 0600,
 	})
+	if err != nil {
+		panic(err)
+	}
 	err = operation.NewOperation(&operation.Config{
 		SourceConfig: csrConfig,
 		Generate:     generator,

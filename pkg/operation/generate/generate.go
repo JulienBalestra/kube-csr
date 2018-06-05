@@ -20,6 +20,7 @@ const (
 	csrType           = "CERTIFICATE REQUEST"
 )
 
+// Config of Generator
 type Config struct {
 	Name     string
 	Override bool
@@ -34,10 +35,12 @@ type Config struct {
 	CSRPermission        os.FileMode
 }
 
+// Generator state
 type Generator struct {
 	conf *Config
 }
 
+// NewGenerator creates a new Generator
 func NewGenerator(conf *Config) *Generator {
 	return &Generator{
 		conf: conf,
@@ -106,6 +109,7 @@ func (g *Generator) generateCryptoData() ([]byte, []byte, error) {
 	return privKeyBytes, csrBytes, nil
 }
 
+// Generate the given CSR
 func (g *Generator) Generate() error {
 	// crypto data
 	privKeyBytes, csrBytes, err := g.generateCryptoData()

@@ -19,6 +19,7 @@ import (
 
 const programName = "kube-csr"
 
+// NewCommand creates a cobra command to be consumed in the main package
 func NewCommand() (*cobra.Command, *int) {
 	var verbose int
 	var exitCode int

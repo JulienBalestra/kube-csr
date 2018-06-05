@@ -35,10 +35,23 @@ verify-docs:
 verify-license:
 	./scripts/verify/license.sh
 
-verify: verify-gofmt verify-docs verify-license
+# Private targets
+PKG=.cmd .docs .examples .pkg .scripts
+$(PKG): %:
+	@# remove the leading '.'
+	ineffassign $(subst .,,$@)
+	golint -set_exit_status $(subst .,,$@)/...
+
+verify-golint: goget $(PKG)
+
+verify: verify-golint verify-gofmt verify-docs verify-license
+
+goget:
+	@which ineffassign || go get github.com/gordonklaus/ineffassign
+	@which golint || go get golang.org/x/lint/golint
 
 sha512sum: $(NAME)
 	$@ ./$^ > $^.$@
 
 # Everything but the $(NAME) target
-.PHONY: clean re gofmt docs license check verify-gofmt verify-docs verify-license verify sha512sum
+.PHONY: clean re gofmt docs license check verify-gofmt verify-docs verify-license verify sha512sum goget
