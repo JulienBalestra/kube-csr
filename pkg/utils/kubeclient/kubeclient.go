@@ -10,6 +10,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+// KubeClient state for a Kubernetes client (inCluster or regular one)
 type KubeClient struct {
 	KubeConfigPath string
 

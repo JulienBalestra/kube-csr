@@ -7,10 +7,12 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// Approval state
 type Approval struct {
 	kubeClient *kubeclient.KubeClient
 }
 
+// NewApproval creates a new Approval
 func NewApproval(kubeConfigPath string) (*Approval, error) {
 	k, err := kubeclient.NewKubeClient(kubeConfigPath)
 	if err != nil {
@@ -21,6 +23,7 @@ func NewApproval(kubeConfigPath string) (*Approval, error) {
 	}, nil
 }
 
+// GetCSR query the kube-apiserver to get the csrName from it
 func (a *Approval) GetCSR(csrName string) (*certificates.CertificateSigningRequest, error) {
 	r, err := a.kubeClient.GetCertificateClient().CertificateSigningRequests().Get(csrName, v1.GetOptions{})
 	if err != nil {
@@ -30,6 +33,7 @@ func (a *Approval) GetCSR(csrName string) (*certificates.CertificateSigningReque
 	return r, nil
 }
 
+// ApproveCSR approve the CSR
 func (a *Approval) ApproveCSR(r *certificates.CertificateSigningRequest) error {
 	glog.V(2).Infof("Approving csr/%s ...", r.Name)
 	r.Status.Conditions = append(r.Status.Conditions, certificates.CertificateSigningRequestCondition{
@@ -47,6 +51,7 @@ func (a *Approval) ApproveCSR(r *certificates.CertificateSigningRequest) error {
 	return nil
 }
 
+// GetAndApproveCSR first call GetCSR and then ApproveCSR on it
 func (a *Approval) GetAndApproveCSR(csrName string) error {
 	r, err := a.GetCSR(csrName)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"github.com/JulienBalestra/kube-csr/pkg/operation/submit"
 )
 
+// Config an operation
 type Config struct {
 	SourceConfig *generate.Config
 
@@ -16,6 +17,7 @@ type Config struct {
 	Fetch    *fetch.Fetch
 }
 
+// Operation state
 type Operation struct {
 	*Config
 }

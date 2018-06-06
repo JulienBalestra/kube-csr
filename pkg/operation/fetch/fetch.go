@@ -15,6 +15,7 @@ import (
 	"github.com/JulienBalestra/kube-csr/pkg/utils/pemio"
 )
 
+// Config of the Fetch
 type Config struct {
 	Override              bool
 	PollingInterval       time.Duration
@@ -23,11 +24,13 @@ type Config struct {
 	CertificatePermission os.FileMode
 }
 
+// Fetch state
 type Fetch struct {
 	conf       *Config
 	kubeClient *kubeclient.KubeClient
 }
 
+// NewFetcher creates a new Fetch
 func NewFetcher(kubeConfigPath string, conf *Config) (*Fetch, error) {
 	k, err := kubeclient.NewKubeClient(kubeConfigPath)
 	if err != nil {
@@ -39,6 +42,7 @@ func NewFetcher(kubeConfigPath string, conf *Config) (*Fetch, error) {
 	}, nil
 }
 
+// Fetch the generated certificate from the CSR
 func (f *Fetch) Fetch(csr *generate.Config) error {
 	glog.V(2).Infof("Start polling for certificate of csr/%s, every %s, timeout after %s", csr.Name, f.conf.PollingInterval.String(), f.conf.PollingTimeout.String())
 	tick := time.NewTicker(f.conf.PollingInterval)
