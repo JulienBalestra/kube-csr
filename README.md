@@ -14,6 +14,8 @@ But you can also choose to skip some steps like:
 * fetch the generated **externally approved** certificate
 
 
+[![asciicast](https://asciinema.org/a/sjcTvHmsdwFNPxZ9TGELrHK53.png)](https://asciinema.org/a/sjcTvHmsdwFNPxZ9TGELrHK53)
+
 ## Command line
 
 Command line example:
