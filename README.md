@@ -16,6 +16,10 @@ But you can also choose to skip some steps like:
 
 [![asciicast](https://asciinema.org/a/sjcTvHmsdwFNPxZ9TGELrHK53.png)](https://asciinema.org/a/sjcTvHmsdwFNPxZ9TGELrHK53)
 
+## Docker image
+
+Available at **quay.io/julienbalestra/kube-csr:latest**
+
 ## Command line
 
 Command line example:
