@@ -56,7 +56,7 @@ spec:
       terminationGracePeriodSeconds: 10
       initContainers:
       - name: kube-csr
-        image: quay.io/julienbalestra/kube-csr:test
+        image: quay.io/julienbalestra/kube-csr:latest
         command:
         - /usr/local/bin/kube-csr
         - $(MY_POD_NAME)
