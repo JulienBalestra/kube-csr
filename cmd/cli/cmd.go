@@ -259,18 +259,10 @@ func newFetchClient() (*fetch.Fetch, error) {
 		crtPath = path.Join(wd, crtPath)
 	}
 
-	fetchInterval := viperConfig.GetDuration("fetch-interval")
-	timeoutInterval := viperConfig.GetDuration("fetch-timeout")
-	if !viperConfig.GetBool("approve") {
-		fetchInterval = defaultFetchInterval * 10
-		timeoutInterval = defaultTimeoutInterval * 10
-		glog.V(2).Infof("csr externally approved, setting the polling interval to %s and the timeout to %s", fetchInterval.String(), timeoutInterval.String())
-	}
-
 	conf := &fetch.Config{
 		Override:              viperConfig.GetBool("override"),
-		PollingInterval:       fetchInterval,
-		PollingTimeout:        timeoutInterval,
+		PollingInterval:       viperConfig.GetDuration("fetch-interval"),
+		PollingTimeout:        viperConfig.GetDuration("fetch-timeout"),
 		CertificatePermission: os.FileMode(viperConfig.GetInt("certificate-perm")),
 		CertificateABSPath:    crtPath,
 	}
