@@ -53,6 +53,7 @@ kube-csr my-app -gsaf --override --kubeconfig-path ~/.kube/config
       --override                            Override any existing file pem and k8s csr resource
       --private-key-file string             Private key file target (default "kube-csr.private_key")
       --rsa-bits string                     RSA bits for the private key (default "2048")
+      --skip-fetch-annotate                 Skip the update of annotations when succesfully fetched the certificate
       --subject-alternative-names strings   Subject Alternative Names (SANs) comma separated
   -s, --submit                              Submit the CSR
   -v, --verbose int                         verbose level (default 2)

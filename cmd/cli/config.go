@@ -40,4 +40,5 @@ func init() {
 	viperConfig.SetDefault("certificate-perm", 0600)
 	viperConfig.SetDefault("fetch-interval", defaultFetchInterval)
 	viperConfig.SetDefault("fetch-timeout", defaultTimeoutInterval)
+	viperConfig.SetDefault("skip-fetch-annotate", false)
 }
