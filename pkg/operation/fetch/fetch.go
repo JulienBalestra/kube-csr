@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	certificates "k8s.io/api/certificates/v1beta1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/JulienBalestra/kube-csr/pkg/operation/generate"
@@ -63,6 +64,7 @@ func (f *Fetch) Fetch(csr *generate.Config) error {
 			return fmt.Errorf("%s", s.String())
 
 		case <-tick.C:
+			// TODO as we are waiting the ticker, if the ticker is set to 10s, we start polling after 10s
 			r, err := f.kubeClient.GetCertificateClient().CertificateSigningRequests().Get(csr.Name, v1.GetOptions{})
 			if err != nil {
 				glog.Errorf("Unexpected error during certificate fetching of csr/%s: %s", csr.Name, err)
@@ -72,6 +74,13 @@ func (f *Fetch) Fetch(csr *generate.Config) error {
 				glog.V(3).Infof("csr/%s:\n%s", csr.Name, string(r.Status.Certificate))
 				glog.V(2).Infof("Certificate successfully fetched, writing %d chars to %s", len(r.Status.Certificate), f.conf.CertificateABSPath)
 				return pemio.WriteFile(r.Status.Certificate, f.conf.CertificateABSPath, f.conf.CertificatePermission, f.conf.Override)
+			}
+			for _, c := range r.Status.Conditions {
+				if c.Type == certificates.CertificateDenied {
+					err := fmt.Errorf("csr/%s uid: %s is %q: %s", r.Name, r.UID, c.Type, c.String())
+					glog.Errorf("Unexpected error during fetch: %v", err)
+					return err
+				}
 			}
 			glog.V(2).Infof("Certificate of csr/%s still not available, next try in %s", csr.Name, f.conf.PollingInterval.String())
 
