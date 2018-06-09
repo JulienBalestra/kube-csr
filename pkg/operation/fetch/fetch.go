@@ -33,6 +33,7 @@ type Config struct {
 	PollingTimeout        time.Duration
 	CertificateABSPath    string
 	CertificatePermission os.FileMode
+	Annotate              bool
 }
 
 // Fetch state
@@ -54,6 +55,10 @@ func NewFetcher(kubeConfigPath string, conf *Config) (*Fetch, error) {
 }
 
 func (f *Fetch) updateAnnotations(r *certificates.CertificateSigningRequest) error {
+	if !f.conf.Annotate {
+		glog.V(2).Infof("Skipping the annotations update")
+		return nil
+	}
 	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
 	if r.Annotations == nil {
 		r.Annotations = map[string]string{

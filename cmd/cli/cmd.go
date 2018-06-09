@@ -173,6 +173,9 @@ func NewCommand() (*cobra.Command, *int) {
 	rootCommand.PersistentFlags().Duration("fetch-timeout", viperConfig.GetDuration("fetch-timeout"), "Polling timeout for certificate fetching")
 	viperConfig.BindPFlag("fetch-timeout", rootCommand.PersistentFlags().Lookup("fetch-timeout"))
 
+	rootCommand.PersistentFlags().Bool("skip-fetch-annotate", viperConfig.GetBool("skip-fetch-annotate"), "Skip the update of annotations when succesfully fetched the certificate")
+	viperConfig.BindPFlag("skip-fetch-annotate", rootCommand.PersistentFlags().Lookup("skip-fetch-annotate"))
+
 	return rootCommand, &exitCode
 }
 
@@ -265,6 +268,7 @@ func newFetchClient() (*fetch.Fetch, error) {
 		PollingTimeout:        viperConfig.GetDuration("fetch-timeout"),
 		CertificatePermission: os.FileMode(viperConfig.GetInt("certificate-perm")),
 		CertificateABSPath:    crtPath,
+		Annotate:              !viperConfig.GetBool("skip-fetch-annotate"),
 	}
 	f, err := fetch.NewFetcher(viperConfig.GetString("kubeconfig-path"), conf)
 	if err != nil {
