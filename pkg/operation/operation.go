@@ -22,7 +22,7 @@ type Operation struct {
 	*Config
 }
 
-// NewOperation instanciate an Operation to potentially
+// NewOperation instantiate an Operation to potentially
 // - generate
 // - submit
 // - approve
