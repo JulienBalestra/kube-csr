@@ -45,13 +45,16 @@ func NewFetcher(kubeConfigPath string, conf *Config) (*Fetch, error) {
 // Fetch the generated certificate from the CSR
 func (f *Fetch) Fetch(csr *generate.Config) error {
 	glog.V(2).Infof("Start polling for certificate of csr/%s, every %s, timeout after %s", csr.Name, f.conf.PollingInterval.String(), f.conf.PollingTimeout.String())
+
 	tick := time.NewTicker(f.conf.PollingInterval)
 	defer tick.Stop()
+
 	timeout := time.NewTimer(f.conf.PollingTimeout)
 	defer tick.Stop()
 
 	ch := make(chan os.Signal)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Stop(ch)
 
 	for {
 		select {
