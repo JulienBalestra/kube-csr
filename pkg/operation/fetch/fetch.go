@@ -20,10 +20,13 @@ import (
 const (
 	// KubeCsrFetchedAnnotationDate is an annotation used to store the timestamp when the certificated has been fetched
 	// This annotation is overridden by the latest fetch
-	KubeCsrFetchedAnnotationDate = "alpha.kube-csr/lastFetched"
+	KubeCsrFetchedAnnotationDate = "alpha.kube-csr/lastFetchTime"
+
+	// KubeCsrFetchedAnnotationDateFormat matches the Kubernetes date format
+	KubeCsrFetchedAnnotationDateFormat = "2006-01-02T15:04:05Z"
 
 	// KubeCsrFetchedAnnotationNb is an annotation used to count the number of fetches of the certificate
-	KubeCsrFetchedAnnotationNb = "alpha.kube-csr/countFetched"
+	KubeCsrFetchedAnnotationNb = "alpha.kube-csr/fetchCount"
 )
 
 // Config of the Fetch
@@ -59,7 +62,7 @@ func (f *Fetch) updateAnnotations(r *certificates.CertificateSigningRequest) err
 		glog.V(1).Infof("Skipping the annotations update")
 		return nil
 	}
-	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	now := time.Now().UTC().Format(KubeCsrFetchedAnnotationDateFormat)
 	if r.Annotations == nil {
 		r.Annotations = map[string]string{
 			KubeCsrFetchedAnnotationDate: now,

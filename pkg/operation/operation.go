@@ -79,7 +79,8 @@ func (o *Operation) Run() error {
 		}
 	}
 	if o.Purge != nil {
-		err := o.Purge.Purge(o.SourceConfig)
+		// TODO be constant on csrName
+		err := o.Purge.Delete(o.SourceConfig.Name)
 		if err != nil {
 			return err
 		}

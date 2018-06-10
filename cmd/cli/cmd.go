@@ -57,8 +57,8 @@ func NewCommand() (*cobra.Command, *int) {
 # Generate the private key, the csr, submit and fetch the csr when externally approved
 %s my-app --generate --submit --fetch --fetch-interval 10s --fetch-timeout 10m
 
-# Generate the private key, the csr, submit, approve, fetch and purge the csr
-%s my-app --generate --submit --approve --fetch --purge 
+# Generate the private key, the csr, submit, approve, fetch and delete the csr
+%s my-app --generate --submit --approve --fetch --delete 
 
 # Generate the private key, the csr, submit, approve and fetch the csr. Override any existing and use a kubeconfig
 %s my-app -gsaf --override --kubeconfig-path ~/.kube/config
@@ -71,8 +71,8 @@ func NewCommand() (*cobra.Command, *int) {
 				!viperConfig.GetBool("submit") &&
 				!viperConfig.GetBool("approve") &&
 				!viperConfig.GetBool("fetch") &&
-				!viperConfig.GetBool("purge") {
-				glog.Errorf("Must choose at least one flag: --generate, --submit, --approve, --fetch, --purge")
+				!viperConfig.GetBool("delete") {
+				glog.Errorf("Must choose at least one flag: --generate, --submit, --approve, --fetch, --delete")
 				exitCode = 1
 				return
 			}
@@ -119,8 +119,8 @@ func NewCommand() (*cobra.Command, *int) {
 					return
 				}
 			}
-			if viperConfig.GetBool("purge") {
-				purger, err = newPurgeClient()
+			if viperConfig.GetBool("delete") {
+				purger, err = newDeleteClient()
 				if err != nil {
 					exitCode = 1
 					return
@@ -158,7 +158,7 @@ func NewCommand() (*cobra.Command, *int) {
 	rootCommand.PersistentFlags().Bool("override", viperConfig.GetBool("override"), "Override any existing file pem and k8s csr resource")
 	viperConfig.BindPFlag("override", rootCommand.PersistentFlags().Lookup("override"))
 
-	// needed by submit, approve, fetch, purge
+	// needed by submit, approve, fetch, delete
 	viperConfig.SetDefault("kubeconfig-path", "")
 	rootCommand.PersistentFlags().String("kubeconfig-path", viperConfig.GetString("kubeconfig-path"), "Kubernetes config path, leave empty for inCluster config")
 	viperConfig.BindPFlag("kubeconfig-path", rootCommand.PersistentFlags().Lookup("kubeconfig-path"))
@@ -223,10 +223,10 @@ func NewCommand() (*cobra.Command, *int) {
 	rootCommand.PersistentFlags().Bool("skip-fetch-annotate", viperConfig.GetBool("skip-fetch-annotate"), "Skip the update of annotations when successfully fetched the certificate")
 	viperConfig.BindPFlag("skip-fetch-annotate", rootCommand.PersistentFlags().Lookup("skip-fetch-annotate"))
 
-	// purge
-	viperConfig.SetDefault("purge", false)
-	rootCommand.PersistentFlags().BoolP("purge", "p", viperConfig.GetBool("purge"), "Purge the CSR from the kube-apiserver")
-	viperConfig.BindPFlag("purge", rootCommand.PersistentFlags().Lookup("purge"))
+	// delete
+	viperConfig.SetDefault("delete", false)
+	rootCommand.PersistentFlags().BoolP("delete", "d", viperConfig.GetBool("delete"), "Delete the given CSR from the kube-apiserver")
+	viperConfig.BindPFlag("delete", rootCommand.PersistentFlags().Lookup("delete"))
 
 	return rootCommand, &exitCode
 }
@@ -315,9 +315,9 @@ func newFetchClient() (*fetch.Fetch, error) {
 	}
 
 	annotate := !viperConfig.GetBool("skip-fetch-annotate")
-	if annotate && viperConfig.GetBool("purge") {
+	if annotate && viperConfig.GetBool("delete") {
 		// useless to annotate a kube resource just deleted after
-		glog.V(0).Infof("As configured with purge, ignoring the annotation operations during the fetch")
+		glog.V(0).Infof("As configured with delete, ignoring the annotation operations during the fetch")
 		annotate = false
 	}
 	conf := &fetch.Config{
@@ -335,8 +335,8 @@ func newFetchClient() (*fetch.Fetch, error) {
 	return f, nil
 }
 
-func newPurgeClient() (*purge.Purge, error) {
-	s, err := purge.NewPurge(viperConfig.GetString("kubeconfig-path"))
+func newDeleteClient() (*purge.Purge, error) {
+	s, err := purge.NewPurge(viperConfig.GetString("kubeconfig-path"), nil)
 	if err != nil {
 		return nil, err
 	}
