@@ -2,6 +2,8 @@
 
 [![CircleCI](https://circleci.com/gh/JulienBalestra/kube-csr.svg?style=svg)](https://circleci.com/gh/JulienBalestra/kube-csr) [![Go Report Card](https://goreportcard.com/badge/github.com/JulienBalestra/kube-csr)](https://goreportcard.com/report/github.com/JulienBalestra/kube-csr) [![Docker Repository on Quay](https://quay.io/repository/julienbalestra/kube-csr/status "Docker Repository on Quay")](https://quay.io/repository/julienbalestra/kube-csr)
 
+## Issue
+
 All in one:
 * generate
     * Private Key - **stay on disk**
@@ -23,7 +25,7 @@ For example, you can do the following actions:
 
 ![diagram](docs/diagram.svg)
 
-[![asciicast](https://asciinema.org/a/sjcTvHmsdwFNPxZ9TGELrHK53.png)](https://asciinema.org/a/sjcTvHmsdwFNPxZ9TGELrHK53)
+[![asciicast](https://asciinema.org/a/uIh0ujCiRiWJ6NOyLcEf369vq.png)](https://asciinema.org/a/uIh0ujCiRiWJ6NOyLcEf369vq)
 
 ## Docker image
 
@@ -37,7 +39,7 @@ Please, have a look to the [release  page](https://github.com/JulienBalestra/kub
 
 Command line example:
 ```text
-$ ./kube-csr etcd --generate --submit --approve --fetch --subject-alternative-names 192.168.1.1,etcd-0.default.svc.cluster.local --kubeconfig-path ~/.kube/config
+$ ./kube-csr issue etcd --generate --submit --approve --fetch --subject-alternative-names 192.168.1.1,etcd-0.default.svc.cluster.local --kubeconfig-path ~/.kube/config
 
 I0602 22:48:12.880405    5241 generate.go:56] Added IP address 192.168.1.1
 I0602 22:48:12.880429    5241 generate.go:61] Added DNS name etcd-0.default.svc.cluster.local
@@ -167,8 +169,8 @@ cluster is healthy
 
 ## Library
 
-Please see an example to use *kube-csr* as library [here](examples/example.go)
+Please see an example to use *kube-csr* as library [here](examples/issue.go)
 
 ```bash
-go get github.com/JulienBalestra/kube-csr
+go get github.com/JulienBalestra/kube-csr/pkg/operation/...
 ```
