@@ -45,17 +45,19 @@ $(PKG): %:
 	@# remove the leading '.'
 	ineffassign $(subst .,,$@)
 	golint -set_exit_status $(subst .,,$@)/...
+	misspell -error $(subst .,,$@)
 
-verify-golint: goget $(PKG)
+verify-misc: goget $(PKG)
 
-verify: verify-golint verify-gofmt verify-docs verify-license verify-examples
+verify: verify-misc verify-gofmt verify-docs verify-license verify-examples
 
 goget:
 	@which ineffassign || go get github.com/gordonklaus/ineffassign
 	@which golint || go get golang.org/x/lint/golint
+	@which misspell || go get github.com/client9/misspell/cmd/misspell
 
 sha512sum: $(NAME)
 	$@ ./$^ > $^.$@
 
 # Everything but the $(NAME) target
-.PHONY: clean re gofmt docs license check verify-gofmt verify-docs verify-license verify sha512sum goget
+.PHONY: clean re gofmt docs license check verify-gofmt verify-docs verify-license verify-misc verify-examples verify sha512sum goget

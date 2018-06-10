@@ -47,7 +47,7 @@ jobs:
           name: verify-license
           command: make verify-license
 
-  ineffassign_golint:
+  misc:
     <<: *job_template
     steps:
       - checkout
@@ -55,8 +55,8 @@ jobs:
           name: goget
           command: make goget
       - run:
-          name: verify-golint
-          command: make -j verify-golint
+          name: verify ineffassign golint misspell
+          command: make -j verify-misc
 
 
 workflows:
@@ -74,5 +74,5 @@ workflows:
       - gofmt
       - docs
       - license
-      - ineffassign_golint
+      - misc
 
