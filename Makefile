@@ -34,7 +34,7 @@ verify-docs:
 	./scripts/verify/docs.sh
 
 verify-examples:
-	$(CC) build $(CFLAGS) -o example examples/example.go
+	$(CC) build $(CFLAGS) -o example examples/issue.go
 
 verify-license:
 	./scripts/verify/license.sh

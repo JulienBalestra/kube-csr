@@ -59,6 +59,7 @@ spec:
         image: quay.io/julienbalestra/kube-csr:latest
         command:
         - /usr/local/bin/kube-csr
+        - issue
         - $(MY_POD_NAME)
         - --csr-name=$(MY_POD_NAME)-$(MY_POD_UID)
         - --generate

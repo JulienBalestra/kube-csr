@@ -2,6 +2,8 @@
 
 [![CircleCI](https://circleci.com/gh/JulienBalestra/kube-csr.svg?style=svg)](https://circleci.com/gh/JulienBalestra/kube-csr) [![Go Report Card](https://goreportcard.com/badge/github.com/JulienBalestra/kube-csr)](https://goreportcard.com/report/github.com/JulienBalestra/kube-csr) [![Docker Repository on Quay](https://quay.io/repository/julienbalestra/kube-csr/status "Docker Repository on Quay")](https://quay.io/repository/julienbalestra/kube-csr)
 
+## Issue
+
 All in one:
 * generate
     * Private Key - **stay on disk**
@@ -23,7 +25,7 @@ For example, you can do the following actions:
 
 ![diagram](docs/diagram.svg)
 
-[![asciicast](https://asciinema.org/a/sjcTvHmsdwFNPxZ9TGELrHK53.png)](https://asciinema.org/a/sjcTvHmsdwFNPxZ9TGELrHK53)
+[![asciicast](https://asciinema.org/a/uIh0ujCiRiWJ6NOyLcEf369vq.png)](https://asciinema.org/a/uIh0ujCiRiWJ6NOyLcEf369vq)
 
 ## Docker image
 
@@ -37,19 +39,19 @@ Please, have a look to the [release  page](https://github.com/JulienBalestra/kub
 
 Command line example:
 ```text
-$ ./kube-csr etcd --generate --submit --approve --fetch --subject-alternative-names 192.168.1.1,etcd-0.default.svc.cluster.local --kubeconfig-path ~/.kube/config
+$ ./kube-csr issue etcd --generate --submit --approve --fetch --subject-alternative-names 192.168.1.1,example.com --kubeconfig-path ~/.kube/config
 
-I0602 22:48:12.880405    5241 generate.go:56] Added IP address 192.168.1.1
-I0602 22:48:12.880429    5241 generate.go:61] Added DNS name etcd-0.default.svc.cluster.local
-I0602 22:48:12.880433    5241 generate.go:70] CSR with 1 DNS names and 1 IP addresses
-I0602 22:48:12.880439    5241 generate.go:91] Generating CSR with CN=etcd
-I0602 22:48:12.883018    5241 write.go:54] Wrote RSA PRIVATE KEY to /home/jb/go/src/github.com/JulienBalestra/kube-csr/kube-csr.private_key
-I0602 22:48:12.883069    5241 write.go:54] Wrote CERTIFICATE REQUEST to /home/jb/go/src/github.com/JulienBalestra/kube-csr/kube-csr.csr
-I0602 22:48:12.893741    5241 submit.go:87] Successfully created csr/etcd-haf 4428adb4-66a6-11e8-94af-5404a66983a9
-I0602 22:48:12.893759    5241 approve.go:34] Approving csr/etcd-haf ...
-I0602 22:48:12.895857    5241 approve.go:45] csr/etcd-haf is approved
-I0602 22:48:12.895953    5241 fetch.go:43] Start polling for certificate of csr/etcd-haf, every 1s, timeout after 10s
-I0602 22:48:13.898763    5241 fetch.go:66] Certificate successfully fetched, writing 1216 chars to /home/jb/go/src/github.com/JulienBalestra/kube-csr/kube-csr.certificate
+I0610 21:07:49.737337    5259 generate.go:59] Added IP address 192.168.1.1
+I0610 21:07:49.737541    5259 generate.go:64] Added DNS name example.com
+I0610 21:07:49.737547    5259 generate.go:73] CSR with 1 DNS names and 1 IP addresses
+I0610 21:07:49.737553    5259 generate.go:94] Generating CSR with CN=etcd
+I0610 21:07:49.740107    5259 write.go:57] Wrote RSA PRIVATE KEY to /home/jb/go/src/github.com/JulienBalestra/kube-csr/kube-csr.private_key
+I0610 21:07:49.740142    5259 write.go:57] Wrote CERTIFICATE REQUEST to /home/jb/go/src/github.com/JulienBalestra/kube-csr/kube-csr.csr
+I0610 21:07:49.750902    5259 submit.go:93] Successfully created csr/etcd-haf uid: 9163ed79-6ce1-11e8-a2ef-5404a66983a9
+I0610 21:07:49.750932    5259 approve.go:38] Approving csr/etcd-haf ...
+I0610 21:07:49.753173    5259 approve.go:49] csr/etcd-haf is approved
+I0610 21:07:49.753192    5259 fetch.go:97] Start polling for certificate of csr/etcd-haf, every 1s, timeout after 10s
+I0610 21:07:50.759603    5259 fetch.go:128] Certificate successfully fetched, writing 1200 chars to /home/jb/go/src/github.com/JulienBalestra/kube-csr/kube-csr.certificate
 ```
 
 The `--override` flag allows to delete and re-submit an already submitted CSR.
@@ -78,11 +80,11 @@ $ kubectl logs po/kube-controller-manager -n kube-system
 
 Have a look the the command line documentation [here](docs/kube-csr.md)
 
-The current Kubernetes setup is deployed with [pupernetes](https://github.com/DataDog/pupernetes)
 
 ### In cluster
 
-In this example, the all in one [etcd](examples/etcd.yaml) example is used.
+The current Kubernetes setup is deployed with [pupernetes](https://github.com/DataDog/pupernetes)
+In this example, the all in one [etcd example](examples/etcd.yaml) is used.
 
 Current cluster:
 ```text
@@ -101,7 +103,6 @@ kube-system   kube-scheduler   1         1         1         1            1     
 
 NAMESPACE     NAME                       READY     STATUS    RESTARTS   AGE
 kube-system   coredns-747dbcf5df-zllhm   1/1       Running   0          1m
-kube-system   kube-apiserver-haf         1/1       Running   0          9s
 kube-system   kube-controller-manager    1/1       Running   0          1m
 kube-system   kube-proxy-2z9vw           1/1       Running   0          1m
 kube-system   kube-scheduler-v8lwc       1/1       Running   0          1m
@@ -124,34 +125,32 @@ Produce:
 $ kubectl get csr,po --show-all
 
 NAME                                              AGE       REQUESTOR                            CONDITION
-etcd-0-b5722b13-66a1-11e8-94af-5404a66983a9   36m       system:serviceaccount:default:etcd   Approved,Issued
-etcd-1-b87e7bc2-66a1-11e8-94af-5404a66983a9   36m       system:serviceaccount:default:etcd   Approved,Issued
-etcd-2-bbac1ba4-66a1-11e8-94af-5404a66983a9   36m       system:serviceaccount:default:etcd   Approved,Issued
+csr/etcd-0-140d1b66-6ce3-11e8-a2ef-5404a66983a9   1m        system:serviceaccount:default:etcd   Approved,Issued
+csr/etcd-1-173e7ddd-6ce3-11e8-a2ef-5404a66983a9   1m        system:serviceaccount:default:etcd   Approved,Issued
+csr/etcd-2-1a6a22a1-6ce3-11e8-a2ef-5404a66983a9   59s       system:serviceaccount:default:etcd   Approved,Issued
 
-
-NAME            READY     STATUS      RESTARTS   AGE
-etcd-0          1/1       Running     0          35m
-etcd-1          1/1       Running     0          35m
-etcd-2          1/1       Running     0          35m
-etcdctl-hkp25   0/1       Completed   0          35m
+NAME        READY     STATUS    RESTARTS   AGE
+po/etcd-0   1/1       Running   0          1m
+po/etcd-1   1/1       Running   0          1m
+po/etcd-2   1/1       Running   0          1m
 ```
 
 Observe the logs of the init container kube-csr:
 ```text
 $ kubectl logs etcd-0 kube-csr
 
-I0602 20:15:36.844699       1 generate.go:56] Added IP address 172.17.0.3
-I0602 20:15:36.845018       1 generate.go:61] Added DNS name etcd-0.etcd.default.svc.cluster.local
-I0602 20:15:36.845025       1 generate.go:61] Added DNS name etcd.default.svc.cluster.local
-I0602 20:15:36.845029       1 generate.go:70] CSR with 2 DNS names and 1 IP addresses
-I0602 20:15:36.845033       1 generate.go:91] Generating CSR with CN=etcd-0
-I0602 20:15:36.847608       1 write.go:54] Wrote RSA PRIVATE KEY to /etc/certs/etcd.private_key
-I0602 20:15:36.847657       1 write.go:54] Wrote CERTIFICATE REQUEST to /etc/certs/etcd.csr
-I0602 20:15:36.857854       1 submit.go:88] Successfully created csr/etcd-0-b5722b13-66a1-11e8-94af-5404a66983a9 b6453f62-66a1-11e8-94af-5404a66983a9
-I0602 20:15:36.857873       1 approve.go:34] Approving csr/etcd-0-b5722b13-66a1-11e8-94af-5404a66983a9 ...
-I0602 20:15:36.860071       1 approve.go:45] csr/etcd-0-b5722b13-66a1-11e8-94af-5404a66983a9 is approved
-I0602 20:15:36.860089       1 fetch.go:43] Start polling for certificate of csr/etcd-0-b5722b13-66a1-11e8-94af-5404a66983a9, every 1s, timeout after 10s
-I0602 20:15:37.862585       1 fetch.go:66] Certificate successfully fetched, writing 1241 chars to /etc/certs/etcd.certificate
+I0610 19:18:39.760447       1 generate.go:59] Added IP address 172.17.0.2
+I0610 19:18:39.760763       1 generate.go:64] Added DNS name etcd-0.etcd.default.svc.cluster.local
+I0610 19:18:39.760768       1 generate.go:64] Added DNS name etcd.default.svc.cluster.local
+I0610 19:18:39.760772       1 generate.go:73] CSR with 2 DNS names and 1 IP addresses
+I0610 19:18:39.760776       1 generate.go:94] Generating CSR with CN=etcd-0
+I0610 19:18:39.765065       1 write.go:57] Wrote RSA PRIVATE KEY to /etc/certs/etcd.private_key
+I0610 19:18:39.765174       1 write.go:57] Wrote CERTIFICATE REQUEST to /etc/certs/etcd.csr
+I0610 19:18:39.774289       1 submit.go:93] Successfully created csr/etcd-0-140d1b66-6ce3-11e8-a2ef-5404a66983a9 uid: 14d5bba8-6ce3-11e8-a2ef-5404a66983a9
+I0610 19:18:39.774306       1 approve.go:38] Approving csr/etcd-0-140d1b66-6ce3-11e8-a2ef-5404a66983a9 ...
+I0610 19:18:39.838744       1 approve.go:49] csr/etcd-0-140d1b66-6ce3-11e8-a2ef-5404a66983a9 is approved
+I0610 19:18:39.838774       1 fetch.go:97] Start polling for certificate of csr/etcd-0-140d1b66-6ce3-11e8-a2ef-5404a66983a9, every 1s, timeout after 10s
+I0610 19:18:40.841823       1 fetch.go:127] Certificate successfully fetched, writing 1281 chars to /etc/certs/etcd.certificate
 ```
 
 See the output of the completed Job:
@@ -167,8 +166,8 @@ cluster is healthy
 
 ## Library
 
-Please see an example to use *kube-csr* as library [here](examples/example.go)
+Please see an example to use *kube-csr* as library [here](examples/issue.go)
 
 ```bash
-go get github.com/JulienBalestra/kube-csr
+go get github.com/JulienBalestra/kube-csr/pkg/operation/...
 ```

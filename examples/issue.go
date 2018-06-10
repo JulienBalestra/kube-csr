@@ -54,7 +54,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	purger, err := purge.NewPurge(kubeConfigPath)
+	purger, err := purge.NewPurge(kubeConfigPath, &purge.Config{})
 	if err != nil {
 		panic(err)
 	}
