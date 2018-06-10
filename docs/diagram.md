@@ -1,7 +1,7 @@
 # HOW TO update the diagram
 
 
-#### diagram
+#### Diagram text
 ```text
 Note over kubecsr: Generate:\n* Private Key\n* CSR
 kubecsr->KubeApiserver: Submit csr
@@ -15,8 +15,8 @@ kubecsr->KubeApiserver: Purge csr
 ```
 
 1. open [js-sequence-diagrams](https://bramp.github.io/js-sequence-diagrams/)
-2. copy/paste the [diagram](#diagram) text in the demo text box
+2. copy/paste the [diagram text](#diagram-text) in the demo text box
 3. try some changes
 4. *download as SVG*
-5. replace the changes in the [diagram](#diagram) section
-6. replace the [diagram][docs/diagram.svg]
+5. replace the changes in the [diagram text](#diagram-text) section
+6. replace the [diagram](docs/diagram.svg)
