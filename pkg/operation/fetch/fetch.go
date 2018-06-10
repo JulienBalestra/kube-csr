@@ -124,8 +124,8 @@ func (f *Fetch) Fetch(csr *generate.Config) error {
 				if err != nil {
 					return err
 				}
+				glog.V(0).Infof("Certificate successfully fetched, writing %d chars to %s", len(r.Status.Certificate), f.conf.CertificateABSPath)
 				glog.V(2).Infof("csr/%s:\n%s", csr.Name, string(r.Status.Certificate))
-				glog.V(1).Infof("Certificate successfully fetched, writing %d chars to %s", len(r.Status.Certificate), f.conf.CertificateABSPath)
 				return pemio.WriteFile(r.Status.Certificate, f.conf.CertificateABSPath, f.conf.CertificatePermission, f.conf.Override)
 			}
 			for _, c := range r.Status.Conditions {
