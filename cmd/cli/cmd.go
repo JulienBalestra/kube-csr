@@ -78,13 +78,13 @@ func NewCommand() (*cobra.Command, *int) {
 				exitCode = 1
 				return
 			}
-			gc, err := newGarbageCollect()
+			gc, err := newGarbageCollector()
 			if err != nil {
 				exitCode = 1
 				return
 			}
 			if viperConfig.GetBool("daemon") {
-				err = gc.GarbageCollectorLoop()
+				err = gc.GarbageCollectLoop()
 			} else {
 				err = gc.GarbageCollect()
 			}
@@ -438,7 +438,7 @@ func newDeleteClient() (*purge.Purge, error) {
 	return s, nil
 }
 
-func newGarbageCollect() (*purge.Purge, error) {
+func newGarbageCollector() (*purge.Purge, error) {
 	conf := purge.NewPurgeConfig(viperConfig.GetDuration("grace-period"))
 	if viperConfig.GetBool("denied") {
 		conf.ShouldGC = append(conf.ShouldGC, purge.IsConditionDenied)

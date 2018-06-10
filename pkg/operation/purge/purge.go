@@ -152,8 +152,8 @@ func (p *Purge) GarbageCollect() error {
 	return nil
 }
 
-// GarbageCollectorLoop runs the GC on ticker, returns on error or SIGINT/TERM
-func (p *Purge) GarbageCollectorLoop() error {
+// GarbageCollectLoop runs the GC on ticker, returns on error or SIGINT/TERM
+func (p *Purge) GarbageCollectLoop() error {
 	tick := time.NewTicker(p.conf.PollingPeriod)
 	defer tick.Stop()
 
