@@ -1,14 +1,16 @@
 # Kubernetes Certificate Signing Request [![CircleCI](https://circleci.com/gh/JulienBalestra/kube-csr.svg?style=svg)](https://circleci.com/gh/JulienBalestra/kube-csr)
 
 All in one:
-* generate a Certificate Signing Request (CSR)
+* generate
+    * Private Key - **stay on disk**
+    * Certificate Signing Request (CSR)
 * submit the generated CSR
 * approve the submitted CSR
 * fetch the generated certificate
 
 
 But you can also choose to skip some steps like:
-* generate the CSR
+* generate the PK, CSR
 * submit the generated CSR
 * <s>approve the submitted CSR</s>
 * fetch the generated **externally approved** certificate
@@ -19,7 +21,11 @@ But you can also choose to skip some steps like:
 
 ## Docker image
 
-Available at **quay.io/julienbalestra/kube-csr:latest**
+Available at `quay.io/julienbalestra/kube-csr:latest`
+
+The tag `latest` is up to date with master.
+
+Please, have a look to the [release  page](https://github.com/JulienBalestra/kube-csr/releases) to get a more stable image tag.
 
 ## Command line
 
