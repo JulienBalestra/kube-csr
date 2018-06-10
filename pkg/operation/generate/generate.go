@@ -56,12 +56,12 @@ func (g *Generator) categorizeHosts() ([]string, []net.IP, error) {
 		ip := net.ParseIP(host)
 		if ip != nil {
 			ipAddresses = append(ipAddresses, ip)
-			glog.V(2).Infof("Added IP address %s", ip.String())
+			glog.V(0).Infof("Added IP address %s", ip.String())
 			continue
 		}
 		if strings.ContainsRune(host, rune('.')) {
 			dnsNames = append(dnsNames, host)
-			glog.V(2).Infof("Added DNS name %s", host)
+			glog.V(0).Infof("Added DNS name %s", host)
 			continue
 		}
 		glog.Errorf("Invalid entry: host %q is neither IP address nor DNS name", host)
@@ -70,7 +70,7 @@ func (g *Generator) categorizeHosts() ([]string, []net.IP, error) {
 	if len(invalidHosts) > 0 {
 		return nil, nil, fmt.Errorf("cannot categorize given hosts: %s", strings.Join(invalidHosts, ", "))
 	}
-	glog.V(2).Infof("CSR with %d DNS names and %d IP addresses", len(dnsNames), len(ipAddresses))
+	glog.V(0).Infof("CSR with %d DNS names and %d IP addresses", len(dnsNames), len(ipAddresses))
 	return dnsNames, ipAddresses, nil
 }
 
@@ -91,7 +91,7 @@ func (g *Generator) generateCryptoData() ([]byte, []byte, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	glog.V(2).Infof("Generating CSR with CN=%s", g.conf.CommonName)
+	glog.V(0).Infof("Generating CSR with CN=%s", g.conf.CommonName)
 	csrTemplate := x509.CertificateRequest{
 		Subject: pkix.Name{
 			CommonName: g.conf.CommonName,

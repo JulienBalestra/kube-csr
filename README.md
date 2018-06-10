@@ -7,13 +7,17 @@ All in one:
 * submit the generated CSR
 * approve the submitted CSR
 * fetch the generated certificate
+* purge the kubernetes csr resource
 
 
-But you can also choose to skip some steps like:
+But you can also choose to select the steps you want to execute.
+
+For example, you can do the following actions:
 * generate the PK, CSR
 * submit the generated CSR
 * <s>approve the submitted CSR</s>
 * fetch the generated **externally approved** certificate
+* <s>purge the kubernetes csr resource</s>
 
 ![diagram](docs/diagram.svg)
 
