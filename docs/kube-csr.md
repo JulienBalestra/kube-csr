@@ -16,6 +16,6 @@ Use this command to manage Kubernetes certificates
 
 ### SEE ALSO
 
-* [kube-csr client](kube-csr_client.md)	 - Use this command to generate, approve, fetch and self-delete Kubernetes certificates
 * [kube-csr garbage-collect](kube-csr_garbage-collect.md)	 - Garbage collect Kubernetes certificates on different parameters
+* [kube-csr issue](kube-csr_issue.md)	 - Use this command to generate, approve, fetch and self-delete Kubernetes certificates
 

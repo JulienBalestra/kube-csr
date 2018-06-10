@@ -120,7 +120,7 @@ func NewCommand() (*cobra.Command, *int) {
 	garbageCommand.PersistentFlags().Bool(daemon, viperConfig.GetBool(daemon), fmt.Sprintf("continually gc Kubernetes csr, paired with --%s", pollingPeriod))
 	viperConfig.BindPFlag(daemon, garbageCommand.PersistentFlags().Lookup(daemon))
 
-	// client command
+	// issue command
 	issueCommandName := fmt.Sprintf("%s issue", programName)
 	issueCommand := &cobra.Command{
 		Use:        "issue",
