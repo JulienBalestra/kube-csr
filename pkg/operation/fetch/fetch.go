@@ -18,15 +18,18 @@ import (
 )
 
 const (
+	// KubeCSRFetchedAnnotationPrefix prefix
+	KubeCSRFetchedAnnotationPrefix = "alpha.kube-csr/"
+
 	// KubeCsrFetchedAnnotationDate is an annotation used to store the timestamp when the certificated has been fetched
 	// This annotation is overridden by the latest fetch
-	KubeCsrFetchedAnnotationDate = "alpha.kube-csr/lastFetchTime"
+	KubeCsrFetchedAnnotationDate = KubeCSRFetchedAnnotationPrefix + "lastFetchTime"
 
 	// KubeCsrFetchedAnnotationDateFormat matches the Kubernetes date format
 	KubeCsrFetchedAnnotationDateFormat = "2006-01-02T15:04:05Z"
 
 	// KubeCsrFetchedAnnotationNb is an annotation used to count the number of fetches of the certificate
-	KubeCsrFetchedAnnotationNb = "alpha.kube-csr/fetchCount"
+	KubeCsrFetchedAnnotationNb = KubeCSRFetchedAnnotationPrefix + "fetchCount"
 )
 
 // Config of the Fetch

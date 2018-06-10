@@ -1,7 +1,10 @@
 package purge
 
 import (
+	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/golang/glog"
@@ -14,8 +17,9 @@ import (
 
 // Config contains purge functions and the grace period
 type Config struct {
-	ShouldPurge []func(*certificates.CertificateSigningRequest, time.Duration) bool
-	GracePeriod time.Duration
+	ShouldGC      []func(*certificates.CertificateSigningRequest, time.Duration) bool
+	GracePeriod   time.Duration
+	PollingPeriod time.Duration
 }
 
 // Purge state
@@ -28,7 +32,7 @@ type Purge struct {
 func NewPurgeConfig(gracePeriod time.Duration, fns ...func(csr *certificates.CertificateSigningRequest, gracePeriod time.Duration) bool) *Config {
 	return &Config{
 		GracePeriod: gracePeriod,
-		ShouldPurge: fns,
+		ShouldGC:    fns,
 	}
 }
 
@@ -67,6 +71,7 @@ func IsConditionDenied(csr *certificates.CertificateSigningRequest, gracePeriod 
 	if condition.LastUpdateTime.After(gracePeriodLimit) {
 		return false
 	}
+	glog.V(2).Infof("csr/%s uid: %s can be GC, has been %s", csr.Name, csr.UID, certificates.CertificateDenied)
 	return true
 }
 
@@ -104,6 +109,7 @@ func IsAnnotationFetched(csr *certificates.CertificateSigningRequest, gracePerio
 	if lastFetchTime.After(gracePeriodLimit) {
 		return false
 	}
+	glog.V(2).Infof("csr/%s uid: %s can be GC, already fetched", csr.Name, csr.UID)
 	return true
 }
 
@@ -126,9 +132,10 @@ func (p *Purge) GarbageCollect() error {
 		return err
 	}
 	glog.V(2).Infof("Kube-apiserver returns %d csr", len(csrList.Items))
+	purged := 0
 	for _, elt := range csrList.Items {
 		glog.V(4).Infof("Got csr/%s", elt.Name)
-		for _, fn := range p.conf.ShouldPurge {
+		for _, fn := range p.conf.ShouldGC {
 			if !fn(&elt, p.conf.GracePeriod) {
 				continue
 			}
@@ -136,7 +143,38 @@ func (p *Purge) GarbageCollect() error {
 			if err != nil {
 				return err
 			}
+			purged++
 		}
 	}
+	if purged > 0 {
+		glog.V(0).Infof("Successfully garbage collected %d csr", purged)
+	}
 	return nil
+}
+
+// GarbageCollectorLoop runs the GC on ticker, returns on error or SIGINT/TERM
+func (p *Purge) GarbageCollectorLoop() error {
+	tick := time.NewTicker(p.conf.PollingPeriod)
+	defer tick.Stop()
+
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Reset(syscall.SIGINT, syscall.SIGTERM)
+	defer close(ch)
+
+	glog.V(0).Infof("Starting gc loop, next run in %s", p.conf.PollingPeriod.String())
+	for {
+		select {
+		case <-ch:
+			glog.V(0).Infof("Exiting ...")
+			return nil
+
+		case <-tick.C:
+			err := p.GarbageCollect()
+			if err != nil {
+				return err
+			}
+			glog.V(0).Infof("GC loop, next run in %s", p.conf.PollingPeriod.String())
+		}
+	}
 }
