@@ -60,17 +60,15 @@ spec:
         command:
         - /usr/local/bin/kube-csr
         - $(MY_POD_NAME)
+        - --csr-name=$(MY_POD_NAME)-$(MY_POD_UID)
         - --generate
         - --submit
         - --approve
         - --fetch
-        - --subject-alternative-names
-        - $(MY_POD_IP),$(MY_POD_NAME).etcd.$(MY_POD_NAMESPACE).svc.cluster.local,etcd.$(MY_POD_NAMESPACE).svc.cluster.local
-        - --override
+        - --subject-alternative-names=$(MY_POD_IP),$(MY_POD_NAME).etcd.$(MY_POD_NAMESPACE).svc.cluster.local,etcd.$(MY_POD_NAMESPACE).svc.cluster.local
         - --private-key-file=/etc/certs/etcd.private_key
         - --csr-file=/etc/certs/etcd.csr
         - --certificate-file=/etc/certs/etcd.certificate
-        - --hostname=$(MY_POD_UID)
         env:
         - name: MY_POD_UID
           valueFrom:
@@ -134,7 +132,11 @@ spec:
         volumeMounts:
         - name: certs
           mountPath: /etc/certs
-      # TODO use probes
+        livenessProbe:
+          tcpSocket:
+            port: etcd
+          initialDelaySeconds: 60
+          periodSeconds: 5
       volumes:
       - emptyDir:
         name: certs
