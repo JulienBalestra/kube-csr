@@ -90,6 +90,6 @@ func (s *Submit) Submit(csr *generate.Config) (*certificates.CertificateSigningR
 			return nil, err
 		}
 	}
-	glog.V(0).Infof("Successfully created csr/%s uuid: %s", r.Name, r.UID)
+	glog.V(0).Infof("Successfully created csr/%s uid: %s", r.Name, r.UID)
 	return r, nil
 }
