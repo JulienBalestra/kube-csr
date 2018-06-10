@@ -1,7 +1,8 @@
 FROM golang:1.10 as builder
 
-RUN git clone --depth=1 https://github.com/JulienBalestra/kube-csr.git /go/src/github.com/JulienBalestra/kube-csr && \
-    make -C /go/src/github.com/JulienBalestra/kube-csr
+COPY . /go/src/github.com/JulienBalestra/kube-csr
+
+RUN make -C /go/src/github.com/JulienBalestra/kube-csr
 
 FROM busybox:latest
 
