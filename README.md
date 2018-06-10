@@ -13,6 +13,7 @@ But you can also choose to skip some steps like:
 * <s>approve the submitted CSR</s>
 * fetch the generated **externally approved** certificate
 
+![diagram](docs/diagram.svg)
 
 [![asciicast](https://asciinema.org/a/sjcTvHmsdwFNPxZ9TGELrHK53.png)](https://asciinema.org/a/sjcTvHmsdwFNPxZ9TGELrHK53)
 
