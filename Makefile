@@ -48,7 +48,7 @@ $(PKG): %:
 
 verify-golint: goget $(PKG)
 
-verify: verify-golint verify-gofmt verify-docs verify-license
+verify: verify-golint verify-gofmt verify-docs verify-license verify-examples
 
 goget:
 	@which ineffassign || go get github.com/gordonklaus/ineffassign
