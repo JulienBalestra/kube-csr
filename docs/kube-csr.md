@@ -60,7 +60,7 @@ kube-csr skydns --csr-name kv-etcd -gsafp --override --kubeconfig-path ~/.kube/c
       --private-key-file string             Private key file target (default "kube-csr.private_key")
   -p, --purge                               Purge the CSR from the kube-apiserver
       --rsa-bits string                     RSA bits for the private key (default "2048")
-      --skip-fetch-annotate                 Skip the update of annotations when succesfully fetched the certificate
+      --skip-fetch-annotate                 Skip the update of annotations when successfully fetched the certificate
       --subject-alternative-names strings   Subject Alternative Names (SANs) comma separated
   -s, --submit                              Submit the CSR
   -v, --verbose int                         verbose level

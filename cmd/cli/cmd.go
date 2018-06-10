@@ -220,7 +220,7 @@ func NewCommand() (*cobra.Command, *int) {
 	viperConfig.BindPFlag("fetch-timeout", rootCommand.PersistentFlags().Lookup("fetch-timeout"))
 
 	viperConfig.SetDefault("skip-fetch-annotate", false)
-	rootCommand.PersistentFlags().Bool("skip-fetch-annotate", viperConfig.GetBool("skip-fetch-annotate"), "Skip the update of annotations when succesfully fetched the certificate")
+	rootCommand.PersistentFlags().Bool("skip-fetch-annotate", viperConfig.GetBool("skip-fetch-annotate"), "Skip the update of annotations when successfully fetched the certificate")
 	viperConfig.BindPFlag("skip-fetch-annotate", rootCommand.PersistentFlags().Lookup("skip-fetch-annotate"))
 
 	// purge

@@ -1,4 +1,4 @@
-# Kubernetes Certificate Signing Request [![CircleCI](https://circleci.com/gh/JulienBalestra/kube-csr.svg?style=svg)](https://circleci.com/gh/JulienBalestra/kube-csr)
+# Kubernetes Certificate Signing Request [![CircleCI](https://circleci.com/gh/JulienBalestra/kube-csr.svg?style=svg)](https://circleci.com/gh/JulienBalestra/kube-csr) [![Go Report Card](https://goreportcard.com/badge/github.com/JulienBalestra/kube-csr)](https://goreportcard.com/report/github.com/JulienBalestra/kube-csr)
 
 All in one:
 * generate

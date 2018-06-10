@@ -18,7 +18,7 @@ type KubeClient struct {
 	restConfig *rest.Config
 }
 
-// NewKubeClient instanciate a new Kubernetes client, pass kubeConfigPath == "" to build an InCluster client
+// NewKubeClient instantiate a new Kubernetes client, pass kubeConfigPath == "" to build an InCluster client
 func NewKubeClient(kubeConfigPath string) (*KubeClient, error) {
 	c := &KubeClient{
 		KubeConfigPath: kubeConfigPath,
