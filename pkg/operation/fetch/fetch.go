@@ -56,7 +56,7 @@ func NewFetcher(kubeConfigPath string, conf *Config) (*Fetch, error) {
 
 func (f *Fetch) updateAnnotations(r *certificates.CertificateSigningRequest) error {
 	if !f.conf.Annotate {
-		glog.V(2).Infof("Skipping the annotations update")
+		glog.V(1).Infof("Skipping the annotations update")
 		return nil
 	}
 	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
@@ -74,10 +74,10 @@ func (f *Fetch) updateAnnotations(r *certificates.CertificateSigningRequest) err
 			glog.Warningf("Cannot parse the annotation %s: %q: %v", KubeCsrFetchedAnnotationNb, nbString, err)
 		}
 		r.Annotations[KubeCsrFetchedAnnotationNb] = strconv.Itoa(nb + 1)
-		glog.V(2).Infof("csr/%s was already fetched before, incr %q annotation to %s", r.Name, KubeCsrFetchedAnnotationNb, r.Annotations[KubeCsrFetchedAnnotationNb])
+		glog.V(1).Infof("csr/%s was already fetched before, incr %q annotation to %s", r.Name, KubeCsrFetchedAnnotationNb, r.Annotations[KubeCsrFetchedAnnotationNb])
 	}
 
-	glog.V(4).Infof("Annotate csr/%s: %s: %s", r.Name, KubeCsrFetchedAnnotationDate, now)
+	glog.V(2).Infof("Annotate csr/%s: %s: %s", r.Name, KubeCsrFetchedAnnotationDate, now)
 	r, err := f.kubeClient.GetCertificateClient().CertificateSigningRequests().Update(r)
 	if err != nil {
 		glog.Errorf("Cannot update annotation of csr/%s: %v", r.Name, err)
@@ -88,7 +88,7 @@ func (f *Fetch) updateAnnotations(r *certificates.CertificateSigningRequest) err
 
 // Fetch the generated certificate from the CSR
 func (f *Fetch) Fetch(csr *generate.Config) error {
-	glog.V(2).Infof("Start polling for certificate of csr/%s, every %s, timeout after %s", csr.Name, f.conf.PollingInterval.String(), f.conf.PollingTimeout.String())
+	glog.V(0).Infof("Start polling for certificate of csr/%s, every %s, timeout after %s", csr.Name, f.conf.PollingInterval.String(), f.conf.PollingTimeout.String())
 
 	tick := time.NewTicker(f.conf.PollingInterval)
 	defer tick.Stop()
@@ -118,8 +118,8 @@ func (f *Fetch) Fetch(csr *generate.Config) error {
 				if err != nil {
 					return err
 				}
-				glog.V(3).Infof("csr/%s:\n%s", csr.Name, string(r.Status.Certificate))
-				glog.V(2).Infof("Certificate successfully fetched, writing %d chars to %s", len(r.Status.Certificate), f.conf.CertificateABSPath)
+				glog.V(2).Infof("csr/%s:\n%s", csr.Name, string(r.Status.Certificate))
+				glog.V(1).Infof("Certificate successfully fetched, writing %d chars to %s", len(r.Status.Certificate), f.conf.CertificateABSPath)
 				return pemio.WriteFile(r.Status.Certificate, f.conf.CertificateABSPath, f.conf.CertificatePermission, f.conf.Override)
 			}
 			for _, c := range r.Status.Conditions {
@@ -129,7 +129,7 @@ func (f *Fetch) Fetch(csr *generate.Config) error {
 					return err
 				}
 			}
-			glog.V(2).Infof("Certificate of csr/%s still not available, next try in %s", csr.Name, f.conf.PollingInterval.String())
+			glog.V(1).Infof("Certificate of csr/%s still not available, next try in %s", csr.Name, f.conf.PollingInterval.String())
 
 		case <-timeout.C:
 			return fmt.Errorf("timeout during certificate fetching of csr/%s", csr.Name)

@@ -10,6 +10,7 @@ $(NAME):
 
 clean:
 	$(RM) $(NAME)
+	$(RM) example
 	$(RM) $(NAME).sha512sum
 
 re: clean $(NAME)
@@ -31,6 +32,9 @@ verify-gofmt:
 
 verify-docs:
 	./scripts/verify/docs.sh
+
+verify-examples:
+	$(CC) build $(CFLAGS) -o example examples/example.go
 
 verify-license:
 	./scripts/verify/license.sh

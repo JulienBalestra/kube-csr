@@ -2,3 +2,6 @@
 /kube-csr.csr
 /kube-csr.private_key
 /kube-csr.certificate
+/example
+/kube-csr.sha512sum
+/.idea

@@ -35,7 +35,7 @@ func (a *Approval) GetCSR(csrName string) (*certificates.CertificateSigningReque
 
 // ApproveCSR approve the CSR
 func (a *Approval) ApproveCSR(r *certificates.CertificateSigningRequest) error {
-	glog.V(2).Infof("Approving csr/%s ...", r.Name)
+	glog.V(0).Infof("Approving csr/%s ...", r.Name)
 	r.Status.Conditions = append(r.Status.Conditions, certificates.CertificateSigningRequestCondition{
 		Type:    certificates.CertificateApproved,
 		Reason:  "kubeCSRApprove",
@@ -46,7 +46,7 @@ func (a *Approval) ApproveCSR(r *certificates.CertificateSigningRequest) error {
 		glog.Errorf("Unexpected error during approval of the CSR: %v", err)
 		return err
 	}
-	glog.V(2).Infof("csr/%s is approved", r.Name)
+	glog.V(0).Infof("csr/%s is approved", r.Name)
 	// TODO propose to generate a kubernetes event
 	return nil
 }

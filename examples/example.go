@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"os"
 	"path"
 	"time"
@@ -9,10 +10,16 @@ import (
 	"github.com/JulienBalestra/kube-csr/pkg/operation/approve"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/fetch"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/generate"
+	"github.com/JulienBalestra/kube-csr/pkg/operation/purge"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/submit"
 )
 
 func main() {
+	// glog section - optional
+	flag.Parse()
+	flag.Lookup("alsologtostderr").Value.Set("true")
+	flag.Lookup("v").Value.Set("2")
+
 	kubeConfigPath := path.Join("/home", os.Getenv("USER"), ".kube/config")
 	//kubeConfigPath := "" empty string to mark as inCluster
 
@@ -47,12 +54,17 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	purger, err := purge.NewPurge(kubeConfigPath)
+	if err != nil {
+		panic(err)
+	}
 	err = operation.NewOperation(&operation.Config{
 		SourceConfig: csrConfig,
 		Generate:     generator,
 		Submit:       submitter,
 		Approve:      approval,
 		Fetch:        fetcher,
+		Purge:        purger,
 	}).Run()
 	if err != nil {
 		panic(err)

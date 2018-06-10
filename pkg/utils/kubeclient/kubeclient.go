@@ -42,7 +42,7 @@ func (k *KubeClient) buildInClusterConfig() error {
 }
 
 func (k *KubeClient) buildFlagsConfig() error {
-	glog.V(2).Infof("Building flags kube-config with %s", k.KubeConfigPath)
+	glog.V(3).Infof("Building flags kube-config with %s", k.KubeConfigPath)
 	kubeConfig, err := clientcmd.BuildConfigFromFlags("", k.KubeConfigPath)
 	if err != nil {
 		glog.Errorf("Fail to build flags config: %v", err)

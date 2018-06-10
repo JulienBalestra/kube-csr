@@ -4,6 +4,7 @@ import (
 	"github.com/JulienBalestra/kube-csr/pkg/operation/approve"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/fetch"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/generate"
+	"github.com/JulienBalestra/kube-csr/pkg/operation/purge"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/submit"
 )
 
@@ -15,6 +16,7 @@ type Config struct {
 	Submit   *submit.Submit
 	Approve  *approve.Approval
 	Fetch    *fetch.Fetch
+	Purge    *purge.Purge
 }
 
 // Operation state
@@ -72,6 +74,12 @@ func (o *Operation) Run() error {
 	}
 	if o.Fetch != nil {
 		err := o.Fetch.Fetch(o.SourceConfig)
+		if err != nil {
+			return err
+		}
+	}
+	if o.Purge != nil {
+		err := o.Purge.Purge(o.SourceConfig)
 		if err != nil {
 			return err
 		}

@@ -45,7 +45,7 @@ func (s *Submit) Submit(csr *generate.Config) (*certificates.CertificateSigningR
 		return nil, err
 	}
 	csrString := string(csrBytes)
-	glog.V(3).Infof("Creating csr/%s:\n%s", csr.Name, csrString)
+	glog.V(2).Infof("Creating csr/%s:\n%s", csr.Name, csrString)
 
 	kubeCSR := &certificates.CertificateSigningRequest{
 		TypeMeta: v1.TypeMeta{
@@ -83,13 +83,13 @@ func (s *Submit) Submit(csr *generate.Config) (*certificates.CertificateSigningR
 			glog.Errorf("Cannot delete csr/%s: %v", csr.Name, err)
 			return nil, err
 		}
-		glog.V(2).Infof("Successfully deleted csr/%s, re-creating ...", csr.Name)
+		glog.V(0).Infof("Successfully deleted csr/%s, re-creating ...", csr.Name)
 		r, err = s.kubeClient.GetCertificateClient().CertificateSigningRequests().Create(kubeCSR)
 		if err != nil {
 			glog.Errorf("Unexpected error during the creation of the csr/%s: %v", csr.Name, err)
 			return nil, err
 		}
 	}
-	glog.V(2).Infof("Successfully created csr/%s %s", r.Name, r.UID)
+	glog.V(0).Infof("Successfully created csr/%s uuid: %s", r.Name, r.UID)
 	return r, nil
 }
