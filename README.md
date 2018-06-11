@@ -25,9 +25,21 @@ For example, you can do the following actions:
 
 ![diagram](docs/diagram.svg)
 
+## Garbage collector - gc
+
+Delete once/periodically (`--daemon`, `--polling-period`) any csr who meets the chosen requirements:
+
+* After the grace period
+    * Annotated as fetched
+    * Denied
+   
+
+    
+## Demo
+
 [![asciicast](https://asciinema.org/a/uIh0ujCiRiWJ6NOyLcEf369vq.png)](https://asciinema.org/a/uIh0ujCiRiWJ6NOyLcEf369vq)
 
-## Docker image
+## Container image
 
 Available at `quay.io/julienbalestra/kube-csr:latest`
 
@@ -166,8 +178,12 @@ cluster is healthy
 
 ## Library
 
-Please see an example to use *kube-csr* as library [here](examples/issue.go)
+Please see an example to use **kube-csr** as library [here](examples/issue.go)
 
 ```bash
 go get github.com/JulienBalestra/kube-csr/pkg/operation/...
 ```
+
+## Features - Enhancement
+
+Please, create an issue !
