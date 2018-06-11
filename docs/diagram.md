@@ -11,7 +11,8 @@ Note over KubeApiserver: Approved
 KubeControllerManager-->KubeApiserver: Issue certificate
 Note over KubeApiserver: Approved,Issued
 kubecsr->KubeApiserver: Fetch certificate
-kubecsr->KubeApiserver: Purge csr
+Note left of kubecsr: The csr is annotate as\n*Fetched* if not deleted
+kubecsr->KubeApiserver: Delete csr
 ```
 
 1. open [js-sequence-diagrams](https://bramp.github.io/js-sequence-diagrams/)
