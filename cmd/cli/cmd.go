@@ -120,6 +120,14 @@ func NewCommand() (*cobra.Command, *int) {
 	garbageCommand.PersistentFlags().Bool(daemon, viperConfig.GetBool(daemon), fmt.Sprintf("continually gc Kubernetes csr, paired with --%s", pollingPeriod))
 	viperConfig.BindPFlag(daemon, garbageCommand.PersistentFlags().Lookup(daemon))
 
+	viperConfig.SetDefault("disable-prometheus-exporter", false)
+	garbageCommand.PersistentFlags().Bool("disable-prometheus-exporter", viperConfig.GetBool("disable-prometheus-exporter"), fmt.Sprintf("disable /metrics, paired with --%s", daemon))
+	viperConfig.BindPFlag("disable-prometheus-exporter", garbageCommand.PersistentFlags().Lookup("disable-prometheus-exporter"))
+
+	viperConfig.SetDefault("prometheus-exporter-bind", "0.0.0.0:8484")
+	garbageCommand.PersistentFlags().Bool("prometheus-exporter-bind", viperConfig.GetBool("prometheus-exporter-bind"), fmt.Sprintf("prometheus exporter bind address, paired with --%s", daemon))
+	viperConfig.BindPFlag("prometheus-exporter-bind", garbageCommand.PersistentFlags().Lookup("prometheus-exporter-bind"))
+
 	// issue command
 	issueCommandName := fmt.Sprintf("%s issue", programName)
 	issueCommand := &cobra.Command{
@@ -447,6 +455,9 @@ func newGarbageCollector() (*purge.Purge, error) {
 		conf.ShouldGC = append(conf.ShouldGC, purge.IsAnnotationFetched)
 	}
 	conf.PollingPeriod = viperConfig.GetDuration("polling-period")
+	if !viperConfig.GetBool("disable-prometheus-exporter") {
+		conf.PrometheusExporterBindAddress = viperConfig.GetString("prometheus-exporter-bind")
+	}
 	p, err := purge.NewPurge(viperConfig.GetString("kubeconfig-path"), conf)
 	if err != nil {
 		return nil, err

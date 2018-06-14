@@ -1,6 +1,7 @@
 package purge
 
 import (
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -8,6 +9,8 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	certificates "k8s.io/api/certificates/v1beta1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -15,17 +18,27 @@ import (
 	"github.com/JulienBalestra/kube-csr/pkg/utils/kubeclient"
 )
 
+const (
+	prometheusExporterPath = "/metrics"
+)
+
 // Config contains purge functions and the grace period
 type Config struct {
-	ShouldGC      []func(*certificates.CertificateSigningRequest, time.Duration) bool
-	GracePeriod   time.Duration
-	PollingPeriod time.Duration
+	ShouldGC                      []func(*certificates.CertificateSigningRequest, time.Duration) bool
+	GracePeriod                   time.Duration
+	PollingPeriod                 time.Duration
+	PrometheusExporterBindAddress string
 }
 
 // Purge state
 type Purge struct {
 	conf       *Config
 	kubeClient *kubeclient.KubeClient
+
+	promKubeAPICSR            prometheus.Gauge
+	promGarbageCollectLatency prometheus.Histogram
+	promDeleteCounter         prometheus.Counter
+	promDeleteCounterError    prometheus.Counter
 }
 
 // NewPurgeConfig returns a Purge Config
@@ -36,16 +49,58 @@ func NewPurgeConfig(gracePeriod time.Duration, fns ...func(csr *certificates.Cer
 	}
 }
 
+// RegisterPrometheusMetrics is a convenient function to create and register prometheus metrics
+func RegisterPrometheusMetrics(p *Purge) error {
+	p.promKubeAPICSR = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kubernetes_apiserver_csr",
+		Help: "Number of Kubernetes Certificate Signing Requests reported by the Kubernetes API",
+	})
+	p.promGarbageCollectLatency = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name: "kubernetes_csr_garbage_collect_latency_seconds",
+		Help: "Latency of garbage collection operations",
+	})
+	p.promDeleteCounter = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "kubernetes_csr_deletes",
+		Help: "Total number of Kubernetes Certificate Signing Requests deleted",
+	})
+	p.promDeleteCounterError = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "kubernetes_csr_delete_errors",
+		Help: "Total number of Kubernetes Certificate Signing Requests deletion errors",
+	})
+	err := prometheus.Register(p.promKubeAPICSR)
+	if err != nil {
+		return err
+	}
+	err = prometheus.Register(p.promGarbageCollectLatency)
+	if err != nil {
+		return err
+	}
+	err = prometheus.Register(p.promDeleteCounter)
+	if err != nil {
+		return err
+	}
+	err = prometheus.Register(p.promDeleteCounterError)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // NewPurge creates a new Fetch
 func NewPurge(kubeConfigPath string, conf *Config) (*Purge, error) {
 	k, err := kubeclient.NewKubeClient(kubeConfigPath)
 	if err != nil {
 		return nil, err
 	}
-	return &Purge{
+	p := &Purge{
 		conf:       conf,
 		kubeClient: k,
-	}, nil
+	}
+	err = RegisterPrometheusMetrics(p)
+	if err != nil {
+		return nil, err
+	}
+	return p, nil
 }
 
 // IsConditionDenied returns if the first condition of the csr is a type Denied
@@ -126,6 +181,7 @@ func (p *Purge) Delete(csrName string) error {
 
 // GarbageCollect iter over all CSR from the kube-apiserver and delete them if needed
 func (p *Purge) GarbageCollect() error {
+	now := time.Now().Unix()
 	csrList, err := p.kubeClient.GetCertificateClient().CertificateSigningRequests().List(v1.ListOptions{})
 	if err != nil {
 		glog.Errorf("Cannot list all csr: %v", err)
@@ -143,17 +199,35 @@ func (p *Purge) GarbageCollect() error {
 			if err != nil {
 				return err
 			}
+			p.promDeleteCounter.Inc()
 			purged++
 		}
 	}
+
+	// metrics
+	elapsedSeconds := time.Now().Unix() - now
+	p.promGarbageCollectLatency.Observe(float64(elapsedSeconds))
+	p.promKubeAPICSR.Set(float64(len(csrList.Items) - purged))
+
+	// logging
 	if purged > 0 {
-		glog.V(0).Infof("Successfully garbage collected %d csr", purged)
+		glog.V(0).Infof("Successfully garbage collected %d csr in %ds", purged, elapsedSeconds)
+		return nil
 	}
+	glog.V(0).Infof("Ended without garbage collect in %ds", elapsedSeconds)
 	return nil
 }
 
 // GarbageCollectLoop runs the GC on ticker, returns on error or SIGINT/TERM
 func (p *Purge) GarbageCollectLoop() error {
+	if p.conf.PrometheusExporterBindAddress != "" {
+		glog.V(0).Infof("Starting prometheus exporter on %s%s", p.conf.PrometheusExporterBindAddress, prometheusExporterPath)
+		http.Handle(prometheusExporterPath, promhttp.Handler())
+		go func() {
+			err := http.ListenAndServe(p.conf.PrometheusExporterBindAddress, nil)
+			glog.Errorf("Unexpected error while starting prometheus exporter: %v", err)
+		}()
+	}
 	tick := time.NewTicker(p.conf.PollingPeriod)
 	defer tick.Stop()
 
@@ -162,7 +236,7 @@ func (p *Purge) GarbageCollectLoop() error {
 	defer signal.Reset(syscall.SIGINT, syscall.SIGTERM)
 	defer close(ch)
 
-	glog.V(0).Infof("Starting gc loop, next run in %s", p.conf.PollingPeriod.String())
+	glog.V(0).Infof("Starting gc loop, first run in %s", p.conf.PollingPeriod.String())
 	for {
 		select {
 		case <-ch:
@@ -172,7 +246,7 @@ func (p *Purge) GarbageCollectLoop() error {
 		case <-tick.C:
 			err := p.GarbageCollect()
 			if err != nil {
-				return err
+				p.promDeleteCounterError.Inc()
 			}
 			glog.V(0).Infof("GC loop, next run in %s", p.conf.PollingPeriod.String())
 		}
