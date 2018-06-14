@@ -11,7 +11,7 @@ All in one:
 * submit the generated CSR
 * approve the submitted CSR
 * fetch the generated certificate
-* purge the kubernetes csr resource
+* delete the kubernetes csr resource
 
 
 But you can also choose to select the steps you want to execute.
@@ -21,7 +21,7 @@ For example, you can do the following actions:
 * submit the generated CSR
 * <s>approve the submitted CSR</s>
 * fetch the generated **externally approved** certificate
-* <s>purge the kubernetes csr resource</s>
+* <s>delete the kubernetes csr resource</s>
 
 ![diagram](docs/diagram.svg)
 
@@ -33,8 +33,6 @@ Delete once/periodically (`--daemon`, `--polling-period`) any csr who meets the 
     * Annotated as fetched
     * Denied
    
-
-    
 ## Demo
 
 [![asciicast](https://asciinema.org/a/uIh0ujCiRiWJ6NOyLcEf369vq.png)](https://asciinema.org/a/uIh0ujCiRiWJ6NOyLcEf369vq)
@@ -91,7 +89,6 @@ $ kubectl logs po/kube-controller-manager -n kube-system
 ```
 
 Have a look the the command line documentation [here](docs/kube-csr.md)
-
 
 ### In cluster
 
