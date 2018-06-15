@@ -1,6 +1,7 @@
 package purge
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -88,6 +89,11 @@ func RegisterPrometheusMetrics(p *Purge) error {
 
 // NewPurge creates a new Fetch
 func NewPurge(kubeConfigPath string, conf *Config) (*Purge, error) {
+	if conf.PollingPeriod == 0 {
+		err := fmt.Errorf("invalid value for PollingPeriod: %s", conf.PollingPeriod.String())
+		glog.Errorf("Cannot use the provided config: %v", err)
+		return nil, err
+	}
 	k, err := kubeclient.NewKubeClient(kubeConfigPath)
 	if err != nil {
 		return nil, err

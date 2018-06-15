@@ -50,6 +50,16 @@ type Fetch struct {
 
 // NewFetcher creates a new Fetch
 func NewFetcher(kubeConfigPath string, conf *Config) (*Fetch, error) {
+	if conf.PollingInterval == 0 {
+		err := fmt.Errorf("invalid value for PollingInterval: %s", conf.PollingInterval.String())
+		glog.Errorf("Cannot use the provided config: %v", err)
+		return nil, err
+	}
+	if conf.PollingTimeout == 0 {
+		err := fmt.Errorf("invalid value for PollingTimeout: %s", conf.PollingTimeout.String())
+		glog.Errorf("Cannot use the provided config: %v", err)
+		return nil, err
+	}
 	k, err := kubeclient.NewKubeClient(kubeConfigPath)
 	if err != nil {
 		return nil, err
