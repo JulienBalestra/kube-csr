@@ -27,12 +27,16 @@ For example, you can do the following actions:
 
 ## Garbage collector - gc
 
-Delete once/periodically (`--daemon`, `--polling-period`) any csr who meets the chosen requirements:
+Delete any Kubernetes csr resources who meets the chosen requirements:
 
 * After the grace period
     * Annotated as fetched
     * Denied
-   
+
+The garbage collector can be daemonized with the adapted flags.
+
+When daemonized, it exposes a prometheus endpoint with the associated [metrics](./docs/metrics.csv).
+
 ## Demo
 
 [![asciicast](https://asciinema.org/a/uIh0ujCiRiWJ6NOyLcEf369vq.png)](https://asciinema.org/a/uIh0ujCiRiWJ6NOyLcEf369vq)
