@@ -94,16 +94,19 @@ jobs:
           name: cli
           command: ./kube-csr issue e2e --generate --submit --approve --fetch --kubeconfig-path $HOME/.kube/config
       - run:
+          name: cli-override
+          command: ./kube-csr issue e2e --generate --submit --approve --fetch --override --kubeconfig-path $HOME/.kube/config
+      - run:
           name: get-ca
           command: kubectl get secret -o json | jq -re '.items[].data["ca.crt"]' | base64 -d > ca.crt
       - run:
           name: openssl-verify
           command: openssl verify -CAfile ca.crt kube-csr.certificate
       - run:
-          name: kubectl
+          name: kubectl-etcd
           command: kubectl apply -f examples/etcd.yaml
       - run:
-          name: etcd
+          name: check-etcd
           command: timeout 600 ./.ci/etcd.sh
       - run:
           name: grace-delete-csr
