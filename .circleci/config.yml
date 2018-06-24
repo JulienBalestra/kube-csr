@@ -117,6 +117,9 @@ jobs:
       - run:
           name: delete-csr
           command: ./kube-csr garbage-collect --fetched --grace-period=0s --kubeconfig-path $HOME/.kube/config
+      - run:
+          name: empty-delete-csr
+          command: ./kube-csr garbage-collect --fetched --denied --grace-period=0s --kubeconfig-path $HOME/.kube/config
 
 workflows:
   version: 2
