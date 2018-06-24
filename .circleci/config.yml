@@ -91,35 +91,8 @@ jobs:
           name: make
           command: make
       - run:
-          name: cli
-          command: ./kube-csr issue e2e --generate --submit --approve --fetch --kubeconfig-path $HOME/.kube/config
-      - run:
-          name: cli-override
-          command: ./kube-csr issue e2e --generate --submit --approve --fetch --override --kubeconfig-path $HOME/.kube/config
-      - run:
-          name: get-ca
-          command: kubectl get secret -o json | jq -re '.items[].data["ca.crt"]' | base64 -d > ca.crt
-      - run:
-          name: openssl-verify
-          command: openssl verify -CAfile ca.crt kube-csr.certificate
-      - run:
-          name: kubectl-etcd
-          command: kubectl apply -f examples/etcd.yaml
-      - run:
-          name: check-etcd
-          command: timeout 600 ./.ci/etcd.sh
-      - run:
-          name: grace-delete-csr
-          command: ./kube-csr garbage-collect --fetched --grace-period=1h --kubeconfig-path $HOME/.kube/config
-      - run:
-          name: no-delete-csr
-          command: ./kube-csr garbage-collect --denied --grace-period=0s --kubeconfig-path $HOME/.kube/config
-      - run:
-          name: delete-csr
-          command: ./kube-csr garbage-collect --fetched --grace-period=0s --kubeconfig-path $HOME/.kube/config
-      - run:
-          name: empty-delete-csr
-          command: ./kube-csr garbage-collect --fetched --denied --grace-period=0s --kubeconfig-path $HOME/.kube/config
+          name: e2e
+          command: ./.ci/e2e.sh
 
 workflows:
   version: 2
