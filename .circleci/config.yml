@@ -6,6 +6,14 @@ templates:
       - image: golang:1.10
     working_directory: /go/src/github.com/JulienBalestra/kube-csr
 
+  machine_job_template: &machine_job_template
+    machine: true
+    working_directory: /home/circleci/.go_workspace/src/github.com/JulienBalestra/kube-csr
+    environment:
+      DEBIAN_FRONTEND: "noninteractive"
+      CFLAGS: ""
+      CGO_ENABLED: "1"
+
 jobs:
   make:
     <<: *job_template
@@ -58,6 +66,33 @@ jobs:
           name: verify ineffassign golint misspell
           command: make -j verify-misc
 
+  pupernetes:
+    <<: *machine_job_template
+    steps:
+      - checkout
+      - run:
+          name: docker-image
+          # Override the latest tag by the current branch, in the store.
+          # TODO: use the image built by quay for this branch
+          command: sudo docker build -t quay.io/julienbalestra/kube-csr:latest .
+      - run:
+          name: kubeconfig
+          command: mkdir -pv $HOME/.kube && touch $HOME/.kube/config && sudo ln -sv /home/circleci/.kube /.kube
+      - run:
+          name: download
+          command: sudo curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.5.0/pupernetes -o /usr/local/bin/pupernetes && sudo chmod +x /usr/local/bin/pupernetes
+      - run:
+          name: apt
+          command: sudo apt-get update -qq && sudo apt-get install -yqq systemd openssl
+      - run:
+          name: run
+          command: sudo /usr/local/bin/pupernetes daemon run sandbox/ --job-type systemd --kubectl-link /usr/local/bin/kubectl
+      - run:
+          name: make
+          command: make
+      - run:
+          name: e2e
+          command: ./.ci/e2e.sh
 
 workflows:
   version: 2
@@ -76,3 +111,6 @@ workflows:
       - license
       - misc
 
+  e2e:
+    jobs:
+      - pupernetes
