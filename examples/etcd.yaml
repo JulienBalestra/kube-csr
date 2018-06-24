@@ -41,6 +41,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: etcd
+  namespace: default
 spec:
   selector:
     matchLabels:
@@ -146,10 +147,14 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: etcdctl
+  namespace: default
 spec:
   backoffLimit: 5
   activeDeadlineSeconds: 60
   template:
+    metadata:
+      labels:
+        app: etcdctl
     spec:
       containers:
       - name: etcdctl
