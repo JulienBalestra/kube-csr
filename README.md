@@ -1,6 +1,6 @@
 # Kubernetes Certificate Signing Request 
 
-[![CircleCI](https://circleci.com/gh/JulienBalestra/kube-csr.svg?style=svg)](https://circleci.com/gh/JulienBalestra/kube-csr) [![Go Report Card](https://goreportcard.com/badge/github.com/JulienBalestra/kube-csr)](https://goreportcard.com/report/github.com/JulienBalestra/kube-csr) [![Docker Repository on Quay](https://quay.io/repository/julienbalestra/kube-csr/status "Docker Repository on Quay")](https://quay.io/repository/julienbalestra/kube-csr)
+[![CircleCI](https://circleci.com/gh/JulienBalestra/kube-csr.svg?style=svg)](https://circleci.com/gh/JulienBalestra/kube-csr) [![Build Status](https://travis-ci.org/JulienBalestra/kube-csr.svg?branch=master)](https://travis-ci.org/JulienBalestra/kube-csr) [![Go Report Card](https://goreportcard.com/badge/github.com/JulienBalestra/kube-csr)](https://goreportcard.com/report/github.com/JulienBalestra/kube-csr) [![Docker Repository on Quay](https://quay.io/repository/julienbalestra/kube-csr/status "Docker Repository on Quay")](https://quay.io/repository/julienbalestra/kube-csr)
 
 ## Issue
 
