@@ -11,6 +11,8 @@ templates:
     working_directory: /home/circleci/.go_workspace/src/github.com/JulienBalestra/kube-csr
     environment:
       DEBIAN_FRONTEND: "noninteractive"
+      CFLAGS: ""
+      CGO_ENABLED: "1"
 
 jobs:
   make:
@@ -69,24 +71,49 @@ jobs:
     steps:
       - checkout
       - run:
+          name: docker-image
+          # Override the latest tag by the current branch, in the store.
+          # TODO: use the image built by quay for this branch
+          command: sudo docker build -t quay.io/julienbalestra/kube-csr:latest .
+      - run:
           name: kubeconfig
-          command: mkdir -pv $HOME/.kube && touch $HOME/.kube/config
+          command: mkdir -pv $HOME/.kube && touch $HOME/.kube/config && sudo ln -sv /home/circleci/.kube /.kube
       - run:
           name: download
           command: sudo curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.5.0/pupernetes -o /usr/local/bin/pupernetes && sudo chmod +x /usr/local/bin/pupernetes
       - run:
           name: apt
-          command: sudo apt-get update -qq && sudo apt-get install -yqq systemd
+          command: sudo apt-get update -qq && sudo apt-get install -yqq systemd openssl
       - run:
           name: run
           command: sudo /usr/local/bin/pupernetes daemon run sandbox/ --job-type systemd --kubectl-link /usr/local/bin/kubectl
+      - run:
+          name: make
+          command: make
+      - run:
+          name: cli
+          command: ./kube-csr issue e2e --generate --submit --approve --fetch --kubeconfig-path $HOME/.kube/config
+      - run:
+          name: get-ca
+          command: kubectl get secret -o json | jq -re '.items[].data["ca.crt"]' | base64 -d > ca.crt
+      - run:
+          name: openssl-verify
+          command: openssl verify -CAfile ca.crt kube-csr.certificate
       - run:
           name: kubectl
           command: kubectl apply -f examples/etcd.yaml
       - run:
           name: etcd
-          command: ./.ci/etcd.sh
-
+          command: timeout 600 ./.ci/etcd.sh
+      - run:
+          name: grace-delete-csr
+          command: ./kube-csr garbage-collect --fetched --grace-period=1h --kubeconfig-path $HOME/.kube/config
+      - run:
+          name: no-delete-csr
+          command: ./kube-csr garbage-collect --denied --grace-period=0s --kubeconfig-path $HOME/.kube/config
+      - run:
+          name: delete-csr
+          command: ./kube-csr garbage-collect --fetched --grace-period=0s --kubeconfig-path $HOME/.kube/config
 
 workflows:
   version: 2
