@@ -2,6 +2,16 @@
 
 [![CircleCI](https://circleci.com/gh/JulienBalestra/kube-csr.svg?style=svg)](https://circleci.com/gh/JulienBalestra/kube-csr) [![Build Status](https://travis-ci.org/JulienBalestra/kube-csr.svg?branch=master)](https://travis-ci.org/JulienBalestra/kube-csr) [![Go Report Card](https://goreportcard.com/badge/github.com/JulienBalestra/kube-csr)](https://goreportcard.com/report/github.com/JulienBalestra/kube-csr) [![Docker Repository on Quay](https://quay.io/repository/julienbalestra/kube-csr/status "Docker Repository on Quay")](https://quay.io/repository/julienbalestra/kube-csr)
 
+## Table of Contents
+- [Issue](#issue)
+- [Garbage Collector](#garbage-collector---gc)
+- [Demo](#demo)
+- [Container image](#container-image)
+- [Command line](#command-line)
+    * [InCluster](#in-cluster)
+- [Library](#library)
+- [Features Enhancement](#features---enhancement)
+
 ## Issue
 
 All in one:
@@ -35,7 +45,7 @@ Delete any Kubernetes csr resources who meets the chosen requirements:
 
 The garbage collector can be daemonized with the adapted flags.
 
-When daemonized, it exposes a prometheus endpoint with the associated [metrics](./docs/metrics.csv).
+When daemonised, it exposes a prometheus endpoint with the associated [metrics](./docs/metrics.csv) and a [pprof](https://golang.org/pkg/net/http/pprof/) endpoint.
 
 ## Demo
 
