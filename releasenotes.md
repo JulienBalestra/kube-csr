@@ -1,4 +1,23 @@
+- [v0.3.0](#v0.3.0)
 - [v0.2.0](#v0.2.0)
+
+## v0.3.0
+
+### Features
+* Add a pprof http handler #31
+* Add a prometheus exporter handler #23
+
+### Bugfix
+* tickers: must be non zero #22
+
+### Other
+* Create a ToC #30
+* Add hyperkube version 1.11.0 #29
+* Add hyperkube versions #26
+* Add travis status badge #25
+* Introduce pupernetes as e2e testing engine. #24
+* readme: update the diagram, replace purge by delete #21
+* Update the diagram and add the gc to the docs #20
 
 ## v0.2.0
 
