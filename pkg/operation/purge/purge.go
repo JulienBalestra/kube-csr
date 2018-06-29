@@ -17,6 +17,8 @@ import (
 
 	"github.com/JulienBalestra/kube-csr/pkg/operation/fetch"
 	"github.com/JulienBalestra/kube-csr/pkg/utils/kubeclient"
+	"github.com/gorilla/mux"
+	"net/http/pprof"
 )
 
 const (
@@ -224,16 +226,42 @@ func (p *Purge) GarbageCollect() error {
 	return nil
 }
 
+func (p *Purge) registerAPI() {
+	if p.conf.PrometheusExporterBindAddress != "" {
+		promRouter := mux.NewRouter()
+		promRouter.Path(prometheusExporterPath).Methods("GET").Handler(promhttp.Handler())
+		promServer := &http.Server{
+			Handler:      promRouter,
+			Addr:         p.conf.PrometheusExporterBindAddress,
+			WriteTimeout: 15 * time.Second,
+			ReadTimeout:  15 * time.Second,
+		}
+		glog.V(0).Infof("Starting prometheus exporter on %s%s", p.conf.PrometheusExporterBindAddress, prometheusExporterPath)
+		go promServer.ListenAndServe()
+	}
+
+	// Known issue with Mux and the registering of pprof:
+	// https://stackoverflow.com/questions/19591065/profiling-go-web-application-built-with-gorillas-mux-with-net-http-pprof
+	const pprofBind = "127.0.0.1:6060"
+	pprofRouter := mux.NewRouter()
+	pprofRouter.HandleFunc("/debug/pprof/", pprof.Index)
+	pprofRouter.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	pprofRouter.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	pprofRouter.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	pprofRouter.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
+	pprofServer := &http.Server{
+		Handler:      pprofRouter,
+		Addr:         pprofBind,
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  60 * time.Second,
+	}
+	glog.V(0).Infof("Starting pprof on %s/debug/pprof", pprofBind)
+	go pprofServer.ListenAndServe()
+}
+
 // GarbageCollectLoop runs the GC on ticker, returns on error or SIGINT/TERM
 func (p *Purge) GarbageCollectLoop() error {
-	if p.conf.PrometheusExporterBindAddress != "" {
-		glog.V(0).Infof("Starting prometheus exporter on %s%s", p.conf.PrometheusExporterBindAddress, prometheusExporterPath)
-		http.Handle(prometheusExporterPath, promhttp.Handler())
-		go func() {
-			err := http.ListenAndServe(p.conf.PrometheusExporterBindAddress, nil)
-			glog.Errorf("Unexpected error while starting prometheus exporter: %v", err)
-		}()
-	}
+	p.registerAPI()
 	tick := time.NewTicker(p.conf.PollingPeriod)
 	defer tick.Stop()
 

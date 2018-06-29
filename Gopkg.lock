@@ -53,6 +53,18 @@
   revision = "24818f796faf91cd76ec7bddd72458fbced7a6c1"
 
 [[projects]]
+  name = "github.com/gorilla/context"
+  packages = ["."]
+  revision = "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
+  version = "v1.1.1"
+
+[[projects]]
+  name = "github.com/gorilla/mux"
+  packages = ["."]
+  revision = "e3702bed27f0d39777b0b37b664b6280e8ef8fbf"
+  version = "v1.6.2"
+
+[[projects]]
   branch = "master"
   name = "github.com/hashicorp/hcl"
   packages = [
@@ -383,6 +395,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4721781a2cb74800c43b28ea6654630f9d1742d5d947e98c3a4c26def431180e"
+  inputs-digest = "bbdc35d05eb925a2f0f0e235b776f755cc1a83f2d68b172e0c73e61d5bb7f762"
   solver-name = "gps-cdcl"
   solver-version = 1
