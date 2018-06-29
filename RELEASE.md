@@ -91,3 +91,21 @@ git push --tags
 Then upload `kube-csr` + `kube-csr.sha512sum` in the release page.
 
 The release must be marked as pre-release.
+
+Create the following fields:
+
+### Binary
+```
+curl -fLO https://github.com/JulienBalestra/kube-csr/releases/download/0.3.0/kube-csr
+curl -fLO https://github.com/JulienBalestra/kube-csr/releases/download/0.3.0/kube-csr.sha512sum
+sha512sum -c ./kube-csr.sha512sum
+chmod +x ./kube-csr
+```
+
+### Container images
+```
+docker pull quay.io/julienbalestra/kube-csr:0.3.0
+rkt fetch quay.io/julienbalestra/kube-csr:0.3.0
+```
+
+Append the fields of the [releasenotes](./releasenotes.md)
