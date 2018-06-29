@@ -9,6 +9,8 @@ core,"github.com/gogo/protobuf/sortkeys",NewBSD
 core,"github.com/golang/glog",Apache-2.0
 core,"github.com/golang/protobuf/proto",NewBSD
 core,"github.com/google/gofuzz",Apache-2.0
+core,"github.com/gorilla/context",NewBSD
+core,"github.com/gorilla/mux",NewBSD
 core,"github.com/hashicorp/hcl",MPL-2.0
 core,"github.com/hashicorp/hcl/hcl/ast",MPL-2.0
 core,"github.com/hashicorp/hcl/hcl/parser",MPL-2.0
