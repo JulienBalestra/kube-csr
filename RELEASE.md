@@ -1,12 +1,21 @@
 # Release process
 
-### Submit a PR
+kube-csr follows Semantic Versionning ([_SemVer_](https://semver.org/)):
+```text
+# Patch update
+0.3.0 -> 0.3.1
 
-Updated master branch:
-```bash
-git checkout master
-git pull
+# Minor update
+0.3.0 -> 0.4.0
+0.9.0 -> 0.10.0
+
+# Major update
+0.3.0 -> 1.0.0
+1.15.4 -> 2.0.0
+...
 ```
+
+### Submit a PR
 
 Clean:
 ```bash
@@ -14,7 +23,18 @@ git clean . -fdx -e .idea
 make clean
 ```
 
-Compile statically the binary and generate the sha512sum:
+Updated master branch with *origin* as remote:
+```bash
+git fetch origin master
+git checkout -B master origin/master
+```
+
+```bash
+git checkout -b v0.3.0
+```
+> note: v0.3.0 is a example and need to be adapted
+
+Compile statically the binary and generate the sha512sum with go *1.10*:
 ```bash
 CGO_ENABLED=0 make sha512sum
 
@@ -41,6 +61,9 @@ sha512sum -c kube-csr.sha512sum
 ./kube-csr: OK
 ```
 
+Update the [releasenotes](./releasenotes.md) accordingly.
+
+Commit and push the changes and open the PR.
 
 ### Push tags
 
@@ -50,27 +73,39 @@ git checkout master
 git pull
 ```
 
+```bash
+cp -v kube-csr.sha512sum pr-kube-csr.sha512sum
+make clean
+CGO_ENABLED=0 make sha512sum
+diff kube-csr.sha512sum pr-kube-csr.sha512sum
+sha512sum -c kube-csr.sha512sum 
+./kube-csr: OK
+```
+
 Tag the release with the new version (e.g. v0.3.0):
 ```bash
 git tag v0.3.0
 git push --tags
 ```
 
-kube-csr follows Semantic Versionning ([_SemVer_](https://semver.org/)):
-```text
-# Patch update
-0.3.0 -> 0.3.1
-
-# Minor update
-0.3.0 -> 0.4.0
-0.9.0 -> 0.10.0
-
-# Major update
-0.3.0 -> 1.0.0
-1.15.4 -> 2.0.0
-...
-```
-
 Then upload `kube-csr` + `kube-csr.sha512sum` in the release page.
 
 The release must be marked as pre-release.
+
+Create the following fields:
+
+### Binary
+```
+curl -fLO https://github.com/JulienBalestra/kube-csr/releases/download/0.3.0/kube-csr
+curl -fLO https://github.com/JulienBalestra/kube-csr/releases/download/0.3.0/kube-csr.sha512sum
+sha512sum -c ./kube-csr.sha512sum
+chmod +x ./kube-csr
+```
+
+### Container images
+```
+docker pull quay.io/julienbalestra/kube-csr:0.3.0
+rkt fetch quay.io/julienbalestra/kube-csr:0.3.0
+```
+
+Append the fields of the [releasenotes](./releasenotes.md)
