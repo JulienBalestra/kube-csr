@@ -17,9 +17,6 @@ env:
 before_install:
   - sudo apt-get update -qq
 
-  # TODO: revamp with p8s --kubeconfig-path
-  - mkdir -pv $HOME/.kube && touch $HOME/.kube/config && sudo ln -sv $HOME/.kube /.kube
-
 install:
   # Override the latest tag by the current branch, in the store.
   # TODO: use the image built by quay for this branch
@@ -28,10 +25,10 @@ install:
   - sudo apt-get install -yqq systemd openssl
   - sudo curl -Lf https://storage.googleapis.com/kubernetes-release/release/v$HYPERKUBE_VERSION/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
   - sudo chmod +x /usr/local/bin/kubectl
-  - sudo curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.5.0/pupernetes -o /usr/local/bin/pupernetes
+  - sudo curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.6.1/pupernetes -o /usr/local/bin/pupernetes
   - sudo chmod +x /usr/local/bin/pupernetes
 
 script:
-  - sudo /usr/local/bin/pupernetes daemon run sandbox/ --job-type systemd --hyperkube-version $HYPERKUBE_VERSION
+  - sudo /usr/local/bin/pupernetes daemon run sandbox/ --job-type systemd --hyperkube-version $HYPERKUBE_VERSION --kubeconfig-path $HOME/.kube/config --dns-check
   - make
   - ./.ci/e2e.sh
