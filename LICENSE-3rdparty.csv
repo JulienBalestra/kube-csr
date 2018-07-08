@@ -30,6 +30,7 @@ core,"github.com/mitchellh/mapstructure",MIT
 core,"github.com/modern-go/concurrent",Apache-2.0
 core,"github.com/modern-go/reflect2",Apache-2.0
 core,"github.com/pelletier/go-toml",MIT
+core,"github.com/pmezard/go-difflib/difflib",FreeBSD
 core,"github.com/prometheus/client_golang/prometheus",Apache-2.0
 core,"github.com/prometheus/client_golang/prometheus/promhttp",Apache-2.0
 core,"github.com/prometheus/client_model/go",Apache-2.0
@@ -49,6 +50,8 @@ core,"github.com/spf13/cobra/doc",Apache-2.0
 core,"github.com/spf13/jwalterweatherman",MIT
 core,"github.com/spf13/pflag",NewBSD
 core,"github.com/spf13/viper",MIT
+core,"github.com/stretchr/testify/assert",MIT
+core,"github.com/stretchr/testify/require",MIT
 core,"golang.org/x/crypto/ssh/terminal",NewBSD
 core,"golang.org/x/net/context",NewBSD
 core,"golang.org/x/net/http/httpguts",NewBSD
