@@ -66,7 +66,7 @@ jobs:
           name: verify ineffassign golint misspell
           command: make -j verify-misc
 
-  pupernetes:
+  e2e:
     <<: *machine_job_template
     steps:
       - checkout
@@ -75,6 +75,9 @@ jobs:
           # Override the latest tag by the current branch, in the store.
           # TODO: use the image built by quay for this branch
           command: sudo docker build -t quay.io/julienbalestra/kube-csr:latest .
+      - run:
+          name: make
+          command: make kube-csr-docker
       - run:
           name: download
           command: sudo curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.6.1/pupernetes -o /usr/local/bin/pupernetes && sudo chmod +x /usr/local/bin/pupernetes
@@ -85,9 +88,6 @@ jobs:
           name: run
           command: sudo /usr/local/bin/pupernetes daemon run sandbox/ --job-type systemd --kubectl-link /usr/local/bin/kubectl --kubeconfig-path $HOME/.kube/config --dns-check
       - run:
-          name: make
-          command: make
-      - run:
           name: e2e
           command: ./.ci/e2e.sh
 
@@ -95,19 +95,13 @@ workflows:
   version: 2
   tests:
     jobs:
-      - tests
-
-  build:
-    jobs:
       - make
-
-  verify:
-    jobs:
+      - tests
       - gofmt
       - docs
       - license
       - misc
-
-  e2e:
-    jobs:
-      - pupernetes
+      - e2e:
+          requires:
+            - make
+            - tests
