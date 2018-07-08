@@ -14,5 +14,6 @@ timeout 600 ./.ci/etcd.sh
 
 ./kube-csr garbage-collect --fetched --grace-period=1h --kubeconfig-path $HOME/.kube/config
 ./kube-csr garbage-collect --denied --grace-period=0s --kubeconfig-path $HOME/.kube/config
+./kube-csr garbage-collect --expired --grace-period=0s --kubeconfig-path $HOME/.kube/config
 ./kube-csr garbage-collect --fetched --grace-period=0s --kubeconfig-path $HOME/.kube/config
-./kube-csr garbage-collect --fetched --denied --grace-period=0s --kubeconfig-path $HOME/.kube/config
+./kube-csr garbage-collect --fetched --denied --expired --grace-period=0s --kubeconfig-path $HOME/.kube/config
