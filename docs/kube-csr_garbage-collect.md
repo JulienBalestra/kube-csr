@@ -34,6 +34,7 @@ kube-csr gc --fetched --daemon polling-period=10m --grace-period=1h
       --daemon                        continually gc Kubernetes csr, paired with --polling-period
       --denied                        delete any denied Kubernetes csr
       --disable-prometheus-exporter   disable /metrics, paired with --daemon
+      --expired                       delete any Kubernetes csr with an expired certificate
       --fetched                       delete any already fetched Kubernetes csr, the state is tracked with kube-annotations "alpha.kube-csr/"
       --grace-period duration         duration to wait before deleting Kubernetes csr objects (default 48h0m0s)
   -h, --help                          help for garbage-collect

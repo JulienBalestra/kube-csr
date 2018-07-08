@@ -73,8 +73,9 @@ func NewCommand() (*cobra.Command, *int) {
 		),
 		Run: func(cmd *cobra.Command, args []string) {
 			if !viperConfig.GetBool("denied") &&
-				!viperConfig.GetBool("fetched") {
-				glog.Errorf("Must choose at least one flag: --denied, --fetched")
+				!viperConfig.GetBool("fetched") &&
+				!viperConfig.GetBool("expired") {
+				glog.Errorf("Must choose at least one flag: --denied, --fetched, --expired")
 				exitCode = 1
 				return
 			}
@@ -109,6 +110,10 @@ func NewCommand() (*cobra.Command, *int) {
 	viperConfig.SetDefault("fetched", false)
 	garbageCommand.PersistentFlags().Bool("fetched", viperConfig.GetBool("fetched"), fmt.Sprintf("delete any already fetched Kubernetes csr, the state is tracked with kube-annotations %q", fetch.KubeCSRFetchedAnnotationPrefix))
 	viperConfig.BindPFlag("fetched", garbageCommand.PersistentFlags().Lookup("fetched"))
+
+	viperConfig.SetDefault("expired", false)
+	garbageCommand.PersistentFlags().Bool("expired", viperConfig.GetBool("expired"), fmt.Sprintf("delete any Kubernetes csr with an expired certificate"))
+	viperConfig.BindPFlag("expired", garbageCommand.PersistentFlags().Lookup("expired"))
 
 	// daemon flags
 	pollingPeriod, daemon := "polling-period", "daemon"
@@ -453,6 +458,9 @@ func newGarbageCollector() (*purge.Purge, error) {
 	}
 	if viperConfig.GetBool("fetched") {
 		conf.ShouldGC = append(conf.ShouldGC, purge.IsAnnotationFetched)
+	}
+	if viperConfig.GetBool("expired") {
+		conf.ShouldGC = append(conf.ShouldGC, purge.IsCertificateExpired)
 	}
 	conf.PollingPeriod = viperConfig.GetDuration("polling-period")
 	if !viperConfig.GetBool("disable-prometheus-exporter") {
