@@ -29,6 +29,6 @@ install:
   - sudo chmod +x /usr/local/bin/pupernetes
 
 script:
-  - sudo /usr/local/bin/pupernetes daemon run sandbox/ --job-type systemd --hyperkube-version $HYPERKUBE_VERSION --kubeconfig-path $HOME/.kube/config --dns-check
   - make
-  - ./.ci/e2e.sh
+  - sudo /usr/local/bin/pupernetes daemon run sandbox/ --job-type systemd --hyperkube-version $HYPERKUBE_VERSION --kubeconfig-path $HOME/.kube/config --dns-check
+  - make ci-e2e

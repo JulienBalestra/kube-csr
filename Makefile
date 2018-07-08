@@ -9,9 +9,7 @@ $(NAME):
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) $(CC) build $(CFLAGS) -o $@ cmd/main.go
 
 clean:
-	$(RM) $(NAME)
-	$(RM) example
-	$(RM) $(NAME).sha512sum
+	$(RM) $(NAME) example $(NAME).sha512sum
 
 re: clean $(NAME)
 
@@ -58,6 +56,12 @@ goget:
 
 sha512sum: $(NAME)
 	$@ ./$^ > $^.$@
+
+$(NAME)-docker:
+	docker run --rm --net=host -v $(PWD):/go/src/github.com/JulienBalestra/kube-csr -w /go/src/github.com/JulienBalestra/kube-csr golang:1.10 make
+
+ci-e2e:
+	./.ci/e2e.sh
 
 # Everything but the $(NAME) target
 .PHONY: clean re gofmt docs license check verify-gofmt verify-docs verify-license verify-misc verify-examples verify sha512sum goget

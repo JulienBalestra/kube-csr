@@ -39,6 +39,9 @@ Compile statically the binary and generate the sha512sum with go *1.10*:
 CGO_ENABLED=0 make sha512sum
 
 # or using docker
+make kube-csr-docker
+
+# or manually
 docker run --rm -v "$GOPATH":/go -w /go/src/github.com/JulienBalestra/kube-csr golang:1.10 make sha512sum
 ```
 
