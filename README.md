@@ -15,6 +15,11 @@
 ## Issue
 
 All in one:
+* query Kubernetes service to get potential subject alternative name (SAN)
+    * ClusterIP
+    * ExternalIPs
+    * LoadBalancerIP
+    * ExternalName
 * generate
     * Private Key - **stay on disk**
     * Certificate Signing Request (CSR)

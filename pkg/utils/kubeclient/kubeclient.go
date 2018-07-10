@@ -5,6 +5,7 @@ import "github.com/golang/glog"
 import (
 	"time"
 
+	"k8s.io/client-go/kubernetes"
 	certapi "k8s.io/client-go/kubernetes/typed/certificates/v1beta1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -14,6 +15,7 @@ import (
 type KubeClient struct {
 	KubeConfigPath string
 
+	clientSet  *kubernetes.Clientset
 	certClient *certapi.CertificatesV1beta1Client
 	restConfig *rest.Config
 }
@@ -61,7 +63,12 @@ func (k *KubeClient) build() error {
 	if err != nil {
 		return err
 	}
-	k.restConfig.Timeout = time.Second * 3 // TODO conf this
+	k.restConfig.Timeout = time.Second * 10 // TODO conf this
+	k.clientSet, err = kubernetes.NewForConfig(k.restConfig)
+	if err != nil {
+		glog.Errorf("Cannot create clientSet: %v", err)
+		return err
+	}
 	k.certClient, err = certapi.NewForConfig(k.restConfig)
 	if err != nil {
 		glog.Errorf("Cannot create certificate client: %v", err)
@@ -73,4 +80,9 @@ func (k *KubeClient) build() error {
 // GetCertificateClient returns the k8s object to work with the certificates API
 func (k *KubeClient) GetCertificateClient() *certapi.CertificatesV1beta1Client {
 	return k.certClient
+}
+
+// GetKubernetesClient returns the k8s object to work with the API
+func (k *KubeClient) GetKubernetesClient() *kubernetes.Clientset {
+	return k.clientSet
 }

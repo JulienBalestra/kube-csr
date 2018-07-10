@@ -72,9 +72,9 @@ jobs:
       - checkout
       - run:
           name: docker-image
-          # Override the latest tag by the current branch, in the store.
+          # Override the master tag by the current branch, in the store.
           # TODO: use the image built by quay for this branch
-          command: sudo docker build -t quay.io/julienbalestra/kube-csr:latest .
+          command: sudo docker build -t quay.io/julienbalestra/kube-csr:master .
       - run:
           name: make
           command: make kube-csr-docker
