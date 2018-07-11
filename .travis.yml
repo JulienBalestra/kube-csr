@@ -20,7 +20,7 @@ before_install:
 install:
   # Override the latest tag by the current branch, in the store.
   # TODO: use the image built by quay for this branch
-  - sudo docker build -t quay.io/julienbalestra/kube-csr:latest .
+  - sudo docker build -t quay.io/julienbalestra/kube-csr:master .
 
   - sudo apt-get install -yqq systemd openssl
   - sudo curl -Lf https://storage.googleapis.com/kubernetes-release/release/v$HYPERKUBE_VERSION/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl

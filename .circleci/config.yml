@@ -89,7 +89,7 @@ jobs:
           command: sudo /usr/local/bin/pupernetes daemon run sandbox/ --job-type systemd --kubectl-link /usr/local/bin/kubectl --kubeconfig-path $HOME/.kube/config --dns-check
       - run:
           name: e2e
-          command: ./.ci/e2e.sh
+          command: make ci-e2e
 
 workflows:
   version: 2
