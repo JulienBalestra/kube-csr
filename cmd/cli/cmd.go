@@ -17,6 +17,7 @@ import (
 	"github.com/JulienBalestra/kube-csr/pkg/operation/fetch"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/generate"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/purge"
+	"github.com/JulienBalestra/kube-csr/pkg/operation/query"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/submit"
 )
 
@@ -198,11 +199,21 @@ func NewCommand() (*cobra.Command, *int) {
 				exitCode = 1
 				return
 			}
+			var querier *query.Query
 			var generator *generate.Generator
 			var submitter *submit.Submit
 			var approval *approve.Approval
 			var fetcher *fetch.Fetch
 			var purger *purge.Purge
+
+			svcToQuery := viperConfig.GetStringSlice("query-svc")
+			if len(svcToQuery) > 0 {
+				querier, err = newQuery(svcToQuery)
+				if err != nil {
+					exitCode = 1
+					return
+				}
+			}
 
 			if viperConfig.GetBool("generate") {
 				generator = generate.NewGenerator(csrConfig)
@@ -238,6 +249,7 @@ func NewCommand() (*cobra.Command, *int) {
 			err = operation.NewOperation(
 				&operation.Config{
 					SourceConfig: csrConfig,
+					Query:        querier,
 					Generate:     generator,
 					Submit:       submitter,
 					Approve:      approval,
@@ -246,6 +258,7 @@ func NewCommand() (*cobra.Command, *int) {
 				},
 			).Run()
 			if err != nil {
+				glog.Errorf("Unexpected error: %v", err)
 				exitCode = 2
 				return
 			}
@@ -265,6 +278,19 @@ func NewCommand() (*cobra.Command, *int) {
 	viperConfig.SetDefault("override", false)
 	issueCommand.PersistentFlags().Bool("override", viperConfig.GetBool("override"), "Override any existing file pem and k8s csr resource")
 	viperConfig.BindPFlag("override", issueCommand.PersistentFlags().Lookup("override"))
+
+	// query
+	viperConfig.SetDefault("query-svc", nil)
+	issueCommand.PersistentFlags().StringSliceP("query-svc", "q", viperConfig.GetStringSlice("query-svc"), "Query the kube-apiserver services to get additional SAN (namespaceName/serviceName) comma separated")
+	viperConfig.BindPFlag("query-svc", issueCommand.PersistentFlags().Lookup("query-svc"))
+
+	viperConfig.SetDefault("query-interval", time.Second*2)
+	issueCommand.PersistentFlags().Duration("query-interval", viperConfig.GetDuration("query-interval"), "Polling interval for kube-service query")
+	viperConfig.BindPFlag("query-interval", issueCommand.PersistentFlags().Lookup("query-interval"))
+
+	viperConfig.SetDefault("query-timeout", time.Second*20)
+	issueCommand.PersistentFlags().Duration("query-timeout", viperConfig.GetDuration("query-timeout"), "Polling timeout for kube-service query")
+	viperConfig.BindPFlag("query-timeout", issueCommand.PersistentFlags().Lookup("query-timeout"))
 
 	// generate
 	viperConfig.SetDefault("generate", false)
@@ -463,4 +489,15 @@ func newGarbageCollector() (*purge.Purge, error) {
 		return nil, err
 	}
 	return p, nil
+}
+
+func newQuery(svcToQuery []string) (*query.Query, error) {
+	q, err := query.NewQuery(viperConfig.GetString("kubeconfig-path"), svcToQuery, &query.Config{
+		PollingTimeout:  viperConfig.GetDuration("query-timeout"),
+		PollingInterval: viperConfig.GetDuration("query-interval"),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return q, nil
 }

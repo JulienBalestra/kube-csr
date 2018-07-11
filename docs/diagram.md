@@ -3,6 +3,7 @@
 
 #### Diagram text
 ```text
+kubecsr->KubeApiserver: Get services SAN
 Note over kubecsr: Generate:\n* Private Key\n* CSR
 kubecsr->KubeApiserver: Submit csr
 Note over KubeApiserver: Pending

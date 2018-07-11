@@ -58,6 +58,9 @@ kube-csr issue skydns --csr-name kv-etcd -gsafd --override --kubeconfig-path ~/.
       --hostname string                     Hostname, leave empty to fulfill with hostname
       --override                            Override any existing file pem and k8s csr resource
       --private-key-file string             Private key file target (default "kube-csr.private_key")
+      --query-interval duration             Polling interval for kube-service query (default 2s)
+  -q, --query-svc strings                   Query the kube-apiserver services to get additional SAN (namespaceName/serviceName) comma separated
+      --query-timeout duration              Polling timeout for kube-service query (default 20s)
       --rsa-bits string                     RSA bits for the private key (default "2048")
       --skip-fetch-annotate                 Skip the update of annotations when successfully fetched the certificate
       --subject-alternative-names strings   Subject Alternative Names (SANs) comma separated

@@ -5,6 +5,7 @@ import (
 	"github.com/JulienBalestra/kube-csr/pkg/operation/fetch"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/generate"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/purge"
+	"github.com/JulienBalestra/kube-csr/pkg/operation/query"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/submit"
 )
 
@@ -12,6 +13,7 @@ import (
 type Config struct {
 	SourceConfig *generate.Config
 
+	Query    *query.Query
 	Generate *generate.Generator
 	Submit   *submit.Submit
 	Approve  *approve.Approval
@@ -54,6 +56,13 @@ func (o *Operation) submit() error {
 
 // Run executes all the configured operations
 func (o *Operation) Run() error {
+	if o.Query != nil {
+		sans, err := o.Query.GetKubernetesServicesSubjectAlternativeNames()
+		if err != nil {
+			return err
+		}
+		o.SourceConfig.Hosts = append(o.SourceConfig.Hosts, sans...)
+	}
 	if o.Generate != nil {
 		err := o.Generate.Generate()
 		if err != nil {
