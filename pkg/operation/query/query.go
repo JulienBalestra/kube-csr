@@ -100,7 +100,7 @@ func (q *Query) GetKubernetesServicesSubjectAlternativeNames() ([]string, error)
 		case <-ticker.C:
 			for _, elt := range q.servicesToQuery {
 				if elt.ok {
-					glog.V(0).Infof("svc/%s in namespace %s already queried", elt.svc, elt.ns)
+					glog.V(0).Infof("Skipping svc/%s in namespace %s: already queried", elt.svc, elt.ns)
 					continue
 				}
 				svc, err := q.kubeClient.GetKubernetesClient().CoreV1().Services(elt.ns).Get(elt.svc, metav1.GetOptions{})
@@ -109,24 +109,24 @@ func (q *Query) GetKubernetesServicesSubjectAlternativeNames() ([]string, error)
 						glog.Errorf("Unexpected error during query svc/%s in namespace %s: %v", elt.svc, elt.ns, err)
 						return nil, err
 					}
-					glog.V(0).Infof("svc/%s in namespace %s is not found", elt.svc, elt.ns)
+					glog.V(0).Infof("Query svc/%s in namespace %s is not found", elt.svc, elt.ns)
 					continue
 				}
-				glog.V(2).Infof("svc/%s in namespace %s returns %s", elt.svc, elt.ns, svc.String())
+				glog.V(2).Infof("Query svc/%s in namespace %s returns %s", elt.svc, elt.ns, svc.String())
 				if svc.Spec.ClusterIP != "" {
-					glog.V(0).Infof("adding SAN .Spec.ClusterIP: %s", svc.Spec.ClusterIP)
+					glog.V(0).Infof("Adding SAN .Spec.ClusterIP: %s from svc/%s in namespace %s", svc.Spec.ClusterIP, elt.svc, elt.ns)
 					sans = append(sans, svc.Spec.ClusterIP)
 				}
 				if len(svc.Spec.ExternalIPs) > 0 {
-					glog.V(0).Infof("adding SAN .Spec.ExternalIPs: %s", svc.Spec.ExternalIPs)
+					glog.V(0).Infof("Adding SAN .Spec.ExternalIPs: %s from svc/%s in namespace %s", svc.Spec.ExternalIPs, elt.svc, elt.ns)
 					sans = append(sans, svc.Spec.ExternalIPs...)
 				}
 				if svc.Spec.LoadBalancerIP != "" {
-					glog.V(0).Infof("adding SAN .Spec.LoadBalancerIP: %s", svc.Spec.LoadBalancerIP)
+					glog.V(0).Infof("Adding SAN .Spec.LoadBalancerIP: %s from svc/%s in namespace %s", svc.Spec.LoadBalancerIP, elt.svc, elt.ns)
 					sans = append(sans, svc.Spec.LoadBalancerIP)
 				}
 				if svc.Spec.ExternalName != "" {
-					glog.V(0).Infof("adding SAN .Spec.ExternalName: %s", svc.Spec.ExternalName)
+					glog.V(0).Infof("Adding SAN .Spec.ExternalName: %s from svc/%s in namespace %s", svc.Spec.ExternalName, elt.svc, elt.ns)
 					sans = append(sans, svc.Spec.ExternalName)
 				}
 				elt.ok = true
@@ -139,9 +139,10 @@ func (q *Query) GetKubernetesServicesSubjectAlternativeNames() ([]string, error)
 				}
 				todo++
 			}
+			glog.V(2).Infof("Services to query %d, done %d, todo %d, %d SAN", len(q.servicesToQuery), done, todo, len(sans))
 			// TODO remove duplicates, if any
 			if todo == 0 && done == len(q.servicesToQuery) {
-				glog.V(0).Infof("Successfully query %d/%d services with %d SANs", done, len(q.servicesToQuery), len(sans))
+				glog.V(0).Infof("Successfully query %d/%d services: %d SAN", done, len(q.servicesToQuery), len(sans))
 				return sans, nil
 			}
 		case <-timeout.C:
