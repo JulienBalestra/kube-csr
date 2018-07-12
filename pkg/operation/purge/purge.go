@@ -1,6 +1,8 @@
 package purge
 
 import (
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"net/http"
 	"os"
@@ -109,6 +111,57 @@ func NewPurge(kubeConfigPath string, conf *Config) (*Purge, error) {
 		return nil, err
 	}
 	return p, nil
+}
+
+// durationFormat is a convenient fmt function to display the duration
+func durationFormat(duration time.Duration) string {
+	if duration.Seconds() < 0 {
+		duration = -duration
+	}
+	var days int
+	for {
+		if duration.Hours() >= 24 {
+			days++
+			duration = duration - time.Hour*24
+			continue
+		}
+		break
+	}
+	duration = duration.Round(time.Second)
+	if days == 0 {
+		return duration.String()
+	}
+	return fmt.Sprintf("%d days and %s", days, duration.String())
+}
+
+// IsCertificateExpired returns if the certificate of the csr is expired according the "Not After" field
+func IsCertificateExpired(csr *certificates.CertificateSigningRequest, gracePeriod time.Duration) bool {
+	if csr.Status.Certificate == nil {
+		glog.V(2).Infof("csr/%s uid: %s does not have any certificate", csr.Name, csr.UID)
+		return false
+	}
+	block, rest := pem.Decode(csr.Status.Certificate)
+	if len(rest) > 0 {
+		glog.Errorf("Unexpected result after certificate decode of csr/%s uid %s %s", csr.Name, csr.UID, string(rest))
+		return false
+	}
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		glog.Errorf("Cannot parse certificate of csr/%s uid %s: %v", csr.Name, csr.UID, err)
+		return false
+	}
+	now := time.Now()
+	if now.Before(cert.NotAfter) {
+		glog.V(2).Infof("csr/%s uid %s not expired, NotAfter: %s, still %s", csr.Name, csr.UID, cert.NotAfter.Format(fetch.KubeCsrFetchedAnnotationDateFormat), durationFormat(cert.NotAfter.Sub(now)))
+		return false
+	}
+	glog.V(2).Infof("csr/%s uid: %s expired since %s", csr.Name, csr.UID, durationFormat(time.Since(cert.NotAfter)))
+	gracePeriodLimit := now.Add(-gracePeriod)
+	if gracePeriodLimit.Before(cert.NotAfter) {
+		glog.V(2).Infof("csr/%s uid %s is expired but still in grace period of %s", csr.Name, csr.UID, durationFormat(cert.NotAfter.Sub(gracePeriodLimit)))
+		return false
+	}
+	return true
 }
 
 // IsConditionDenied returns if the first condition of the csr is a type Denied
