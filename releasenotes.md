@@ -1,5 +1,17 @@
+- [v0.4.0](#v0.4.0)
 - [v0.3.0](#v0.3.0)
 - [v0.2.0](#v0.2.0)
+
+## v0.4.0
+
+### Features
+* Add an expired purge capability #40
+* Include Kubernetes services DNS and IPs in SAN #41
+
+### Other
+* Add unittests in generate and pemio #39
+* Improve ci #38
+* Upgrade to p8s 0.6.1 #35
 
 ## v0.3.0
 
