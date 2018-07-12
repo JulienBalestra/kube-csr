@@ -113,21 +113,14 @@ func NewPurge(kubeConfigPath string, conf *Config) (*Purge, error) {
 	return p, nil
 }
 
+// durationFormat is a convenient fmt function to display the duration
 func durationFormat(duration time.Duration) string {
 	if duration.Seconds() < 0 {
 		duration = -duration
 	}
-	var months, days int
+	var days int
 	for {
-		if duration.Hours() > (31 * 24) {
-			months++
-			duration = duration - (31 * 24 * time.Hour)
-		}
-		if days > 31 {
-			months++
-			days = days - 31
-		}
-		if duration.Hours() > 24 {
+		if duration.Hours() >= 24 {
 			days++
 			duration = duration - time.Hour*24
 			continue
@@ -138,10 +131,7 @@ func durationFormat(duration time.Duration) string {
 	if days == 0 {
 		return duration.String()
 	}
-	if months == 0 {
-		return fmt.Sprintf("%d days %s", days, duration.String())
-	}
-	return fmt.Sprintf("%d months %d days and %s", months, days, duration.String())
+	return fmt.Sprintf("%d days and %s", days, duration.String())
 }
 
 // IsCertificateExpired returns if the certificate of the csr is expired according the "Not After" field
