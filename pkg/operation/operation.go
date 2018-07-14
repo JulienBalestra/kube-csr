@@ -1,6 +1,8 @@
 package operation
 
 import (
+	"github.com/golang/glog"
+
 	"github.com/JulienBalestra/kube-csr/pkg/operation/approve"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/fetch"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/generate"
@@ -27,6 +29,7 @@ type Operation struct {
 }
 
 // NewOperation instantiate an Operation to potentially
+// - query
 // - generate
 // - submit
 // - approve
@@ -56,6 +59,7 @@ func (o *Operation) submit() error {
 
 // Run executes all the configured operations
 func (o *Operation) Run() error {
+	glog.V(0).Infof("Running operations ...")
 	if o.Query != nil {
 		sans, err := o.Query.GetKubernetesServicesSubjectAlternativeNames()
 		if err != nil {
@@ -94,5 +98,6 @@ func (o *Operation) Run() error {
 			return err
 		}
 	}
+	glog.V(0).Infof("Successfully finished operations")
 	return nil
 }
