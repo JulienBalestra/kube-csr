@@ -186,5 +186,4 @@ spec:
         do echo '---'; sleep 2; done"
       restartPolicy: Never
       terminationGracePeriodSeconds: 1
-      serviceAccount: etcd
-
+---
