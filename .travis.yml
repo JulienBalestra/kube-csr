@@ -12,7 +12,7 @@ env:
   matrix:
     - HYPERKUBE_VERSION=1.11.0
     - HYPERKUBE_VERSION=1.10.5
-    - HYPERKUBE_VERSION=1.9.8
+    #- HYPERKUBE_VERSION=1.9.8 TODO restore when pupernetes release 0.7.0
 
 before_install:
   - sudo apt-get update -qq
