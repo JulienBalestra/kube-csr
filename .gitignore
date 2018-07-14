@@ -5,3 +5,4 @@
 /example
 /kube-csr.sha512sum
 /.idea
+/.ci/metrics-server.yaml
