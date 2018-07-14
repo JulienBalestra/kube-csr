@@ -11,6 +11,7 @@ import (
 	"github.com/JulienBalestra/kube-csr/pkg/operation/fetch"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/generate"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/purge"
+	"github.com/JulienBalestra/kube-csr/pkg/operation/query"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/submit"
 )
 
@@ -34,6 +35,13 @@ func main() {
 		CSRPermission:        0600,
 		Override:             true,
 	}
+	querier, err := query.NewQuery(kubeConfigPath, []string{"kubernetes"}, &query.Config{
+		PollingTimeout:  time.Second * 10,
+		PollingInterval: time.Second * 1,
+	})
+	if err != nil {
+		panic(err)
+	}
 	generator := generate.NewGenerator(csrConfig)
 	submitter, err := submit.NewSubmitter(kubeConfigPath, &submit.Config{
 		Override: true,
@@ -54,12 +62,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	purger, err := purge.NewPurge(kubeConfigPath, &purge.Config{})
+	purger, err := purge.NewPurge(kubeConfigPath, &purge.Config{
+		PollingPeriod: time.Second * 1,
+	})
 	if err != nil {
 		panic(err)
 	}
 	err = operation.NewOperation(&operation.Config{
 		SourceConfig: csrConfig,
+		Query:        querier,
 		Generate:     generator,
 		Submit:       submitter,
 		Approve:      approval,

@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -exo pipefail
+set -exuo pipefail
 
 cd $(dirname $0)/..
 
@@ -18,3 +18,7 @@ timeout 600 ./.ci/etcd.sh
 ./kube-csr garbage-collect --expired --grace-period=0s --kubeconfig-path $HOME/.kube/config
 ./kube-csr garbage-collect --fetched --grace-period=0s --kubeconfig-path $HOME/.kube/config
 ./kube-csr garbage-collect --fetched --denied --expired --grace-period=0s --kubeconfig-path $HOME/.kube/config
+
+echo "testing the lib example:"
+go run examples/issue.go
+echo "lib example returned $?"
