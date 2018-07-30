@@ -6,7 +6,7 @@ import (
 
 	"github.com/golang/glog"
 
-	"github.com/JulienBalestra/kube-csr/cmd/cli"
+	"github.com/JulienBalestra/kube-csr/cmd"
 )
 
 func init() {
@@ -14,7 +14,7 @@ func init() {
 }
 
 func main() {
-	command, exitCode := cli.NewCommand()
+	command, exitCode := cmd.NewCommand()
 	err := command.Execute()
 	if err != nil {
 		os.Exit(1)
