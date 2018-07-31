@@ -6,7 +6,7 @@ CGO_ENABLED?=0
 NAME=kube-csr
 
 $(NAME):
-	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) $(CC) build $(CFLAGS) -o $@ cmd/main.go
+	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) $(CC) build $(CFLAGS) -o $@
 
 clean:
 	$(RM) $(NAME) example $(NAME).sha512sum

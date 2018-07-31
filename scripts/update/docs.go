@@ -19,7 +19,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra/doc"
 
-	"github.com/JulienBalestra/kube-csr/cmd/cli"
+	"github.com/JulienBalestra/kube-csr/cmd"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/purge"
 )
 
@@ -39,7 +39,7 @@ func main() {
 	if err != nil {
 		glog.Exitf("Cannot create markdown in %s", docDir)
 	}
-	command, _ := cli.NewCommand()
+	command, _ := cmd.NewCommand()
 	err = doc.GenMarkdownTree(command, docDir)
 	if err != nil {
 		glog.Exitln(err)
