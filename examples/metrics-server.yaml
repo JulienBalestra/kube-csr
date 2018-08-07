@@ -131,12 +131,17 @@ spec:
         imagePullPolicy: Always
         command:
         - /metrics-server
-        - --source=kubernetes.summary_api:''?useServiceAccount=true&kubeletHttps=true&kubeletPort=10250
         - --client-ca-file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         - --tls-cert-file=/etc/certs/metrics-server.certificate
         - --tls-ca-file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         - --tls-private-key-file=/etc/certs/metrics-server.private_key
         - --metric-resolution=6s # caution: value for tests, default is 1m0s
+        - --source=kubernetes.summary_api:''?useServiceAccount=true&kubeletHttps=true&kubeletPort=10250
+
+        # alternative if the kubelet TLS bootstrap doesn't issue proper server certs
+        # this is a common issue before Kubernetes 1.11
+        # note the additional: &insecure=true
+        #- --source=kubernetes.summary_api:''?useServiceAccount=true&kubeletHttps=true&kubeletPort=10250&insecure=true
         volumeMounts:
         - name: certs
           mountPath: /etc/certs
