@@ -26,19 +26,26 @@ subjects:
   name: metrics-server
   namespace: kube-system
 ---
-apiVersion: apiregistration.k8s.io/v1beta1
-kind: APIService
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: v1beta1.metrics.k8s.io
-spec:
-  caBundle: "REQUEST_HEADER_CLIENT_CA" # TODO this is for sed: find something better
-  service:
-    name: metrics-server
-    namespace: kube-system
-  group: metrics.k8s.io
-  version: v1beta1
-  groupPriorityMinimum: 100
-  versionPriority: 100
+  name: metrics-server
+  namespace: kube-system
+data:
+  apiservice.yaml: |
+    apiVersion: apiregistration.k8s.io/v1beta1
+    kind: APIService
+    metadata:
+      name: v1beta1.metrics.k8s.io
+    spec:
+      caBundle: "REQUEST_HEADER_CLIENT_CA" # TODO this is for sed: find something better
+      service:
+        name: metrics-server
+        namespace: kube-system
+      group: metrics.k8s.io
+      version: v1beta1
+      groupPriorityMinimum: 100
+      versionPriority: 100
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -63,6 +70,7 @@ spec:
       labels:
         k8s-app: metrics-server
     spec:
+      serviceAccountName: metrics-server
       initContainers:
       - name: kube-csr
         image: quay.io/julienbalestra/kube-csr:master
@@ -101,25 +109,51 @@ spec:
         - name: certs
           mountPath: /etc/certs
 
-      serviceAccountName: metrics-server
+      - name: apply-apiservice
+        image: gcr.io/google_containers/hyperkube:v1.11.0
+        command:
+        - /bin/sh
+        - -euxc
+        - |
+          B64_CA=$(cat /etc/extension-apiserver-authentication/ca.crt | base64 | tr -d '\n')
+          /bin/sed -e "s|REQUEST_HEADER_CLIENT_CA|$B64_CA|g" /etc/metrics-server/apiservice.yaml | /hyperkube kubectl apply -f -
+
+        volumeMounts:
+        - name: metrics-server
+          mountPath: /etc/metrics-server
+        - name: extension-apiserver-authentication
+          mountPath: /etc/extension-apiserver-authentication/ca.crt
+          subPath: requestheader-client-ca-file
+
       containers:
       - name: metrics-server
         image: gcr.io/google_containers/metrics-server-amd64:v0.2.1
         imagePullPolicy: Always
         command:
         - /metrics-server
-        - --source=kubernetes.summary_api:''?useServiceAccount=true&kubeletHttps=true&kubeletPort=10250
         - --client-ca-file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         - --tls-cert-file=/etc/certs/metrics-server.certificate
         - --tls-ca-file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         - --tls-private-key-file=/etc/certs/metrics-server.private_key
         - --metric-resolution=6s # caution: value for tests, default is 1m0s
+        - --source=kubernetes.summary_api:''?useServiceAccount=true&kubeletHttps=true&kubeletPort=10250
+
+        # alternative if the kubelet TLS bootstrap doesn't issue proper server certs
+        # this is a common issue before Kubernetes 1.11
+        # note the additional: &insecure=true
+        #- --source=kubernetes.summary_api:''?useServiceAccount=true&kubeletHttps=true&kubeletPort=10250&insecure=true
         volumeMounts:
         - name: certs
           mountPath: /etc/certs
       volumes:
       - emptyDir:
         name: certs
+      - name: extension-apiserver-authentication
+        configMap:
+          name: extension-apiserver-authentication
+      - name: metrics-server
+        configMap:
+          name: metrics-server
 ---
 apiVersion: v1
 kind: Service
@@ -127,7 +161,7 @@ metadata:
   name: metrics-server
   namespace: kube-system
   labels:
-    kubernetes.io/name: "Metrics-server"
+    kubernetes.io/name: "metrics-server"
 spec:
   selector:
     k8s-app: metrics-server
@@ -173,6 +207,14 @@ rules:
 - apiGroups: [""]
   resources: ["services"]
   verbs: ["get"]
+- apiGroups:
+  - "apiregistration.k8s.io"
+  resources:
+  - "apiservices"
+  verbs:
+  - create
+  - get
+  - patch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
