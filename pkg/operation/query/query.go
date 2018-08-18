@@ -140,7 +140,6 @@ func (q *Query) GetKubernetesServicesSubjectAlternativeNames() ([]string, error)
 				todo++
 			}
 			glog.V(2).Infof("Services to query %d, done %d, todo %d, %d SAN", len(q.servicesToQuery), done, todo, len(sans))
-			// TODO remove duplicates, if any
 			if todo == 0 && done == len(q.servicesToQuery) {
 				glog.V(0).Infof("Successfully query %d/%d services: %d SAN", done, len(q.servicesToQuery), len(sans))
 				return sans, nil
