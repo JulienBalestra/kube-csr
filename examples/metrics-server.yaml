@@ -128,7 +128,6 @@ spec:
       containers:
       - name: metrics-server
         image: gcr.io/google_containers/metrics-server-amd64:v0.2.1
-        imagePullPolicy: Always
         command:
         - /metrics-server
         - --client-ca-file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
@@ -145,6 +144,37 @@ spec:
         volumeMounts:
         - name: certs
           mountPath: /etc/certs
+
+      - name: kube-csr-renew
+        image: quay.io/julienbalestra/kube-csr:master
+        command:
+        - /usr/local/bin/kube-csr
+        - issue
+        - aggregator
+        - --csr-name=$(MY_POD_NAME)-$(MY_POD_UID)
+        - --private-key-file=/etc/certs/metrics-server.private_key
+        - --csr-file=/etc/certs/metrics-server.csr
+        - --certificate-file=/etc/certs/metrics-server.certificate
+
+        - --approve
+        - --renew
+        - --renew-check-interval=1m # caution: value for tests
+        - --renew-threshold=8759h45m  # caution: value for tests
+        - --renew-exit
+        env:
+        - name: MY_POD_UID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+
+        volumeMounts:
+        - name: certs
+          mountPath: /etc/certs
+
       volumes:
       - emptyDir:
         name: certs

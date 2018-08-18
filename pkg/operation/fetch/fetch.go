@@ -12,7 +12,6 @@ import (
 	certificates "k8s.io/api/certificates/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/JulienBalestra/kube-csr/pkg/operation/generate"
 	"github.com/JulienBalestra/kube-csr/pkg/utils/kubeclient"
 	"github.com/JulienBalestra/kube-csr/pkg/utils/pemio"
 )
@@ -44,7 +43,7 @@ type Config struct {
 
 // Fetch state
 type Fetch struct {
-	conf       *Config
+	Conf       *Config
 	kubeClient *kubeclient.KubeClient
 }
 
@@ -66,12 +65,12 @@ func NewFetcher(kubeConfigPath string, conf *Config) (*Fetch, error) {
 	}
 	return &Fetch{
 		kubeClient: k,
-		conf:       conf,
+		Conf:       conf,
 	}, nil
 }
 
 func (f *Fetch) updateAnnotations(r *certificates.CertificateSigningRequest) error {
-	if !f.conf.Annotate {
+	if !f.Conf.Annotate {
 		glog.V(1).Infof("Skipping the annotations update")
 		return nil
 	}
@@ -103,13 +102,13 @@ func (f *Fetch) updateAnnotations(r *certificates.CertificateSigningRequest) err
 }
 
 // Fetch the generated certificate from the CSR
-func (f *Fetch) Fetch(csr *generate.Config) error {
-	glog.V(0).Infof("Start polling for certificate of csr/%s, every %s, timeout after %s", csr.Name, f.conf.PollingInterval.String(), f.conf.PollingTimeout.String())
+func (f *Fetch) Fetch(csrName string) error {
+	glog.V(0).Infof("Start polling for certificate of csr/%s, every %s, timeout after %s", csrName, f.Conf.PollingInterval.String(), f.Conf.PollingTimeout.String())
 
-	tick := time.NewTicker(f.conf.PollingInterval)
+	tick := time.NewTicker(f.Conf.PollingInterval)
 	defer tick.Stop()
 
-	timeout := time.NewTimer(f.conf.PollingTimeout)
+	timeout := time.NewTimer(f.Conf.PollingTimeout)
 	defer tick.Stop()
 
 	ch := make(chan os.Signal)
@@ -124,9 +123,9 @@ func (f *Fetch) Fetch(csr *generate.Config) error {
 
 		case <-tick.C:
 			// TODO as we are waiting the ticker, if the ticker is set to 10s, we start polling after 10s
-			r, err := f.kubeClient.GetCertificateClient().CertificateSigningRequests().Get(csr.Name, metav1.GetOptions{})
+			r, err := f.kubeClient.GetCertificateClient().CertificateSigningRequests().Get(csrName, metav1.GetOptions{})
 			if err != nil {
-				glog.Errorf("Unexpected error during certificate fetching of csr/%s: %s", csr.Name, err)
+				glog.Errorf("Unexpected error during certificate fetching of csr/%s: %s", csrName, err)
 				return err
 			}
 			if r.Status.Certificate != nil {
@@ -134,9 +133,9 @@ func (f *Fetch) Fetch(csr *generate.Config) error {
 				if err != nil {
 					return err
 				}
-				glog.V(0).Infof("Certificate successfully fetched, writing %d chars to %s", len(r.Status.Certificate), f.conf.CertificateABSPath)
-				glog.V(2).Infof("csr/%s:\n%s", csr.Name, string(r.Status.Certificate))
-				return pemio.WriteFile(r.Status.Certificate, f.conf.CertificateABSPath, f.conf.CertificatePermission, f.conf.Override)
+				glog.V(0).Infof("Certificate successfully fetched, writing %d chars to %s", len(r.Status.Certificate), f.Conf.CertificateABSPath)
+				glog.V(2).Infof("csr/%s:\n%s", csrName, string(r.Status.Certificate))
+				return pemio.WriteFile(r.Status.Certificate, f.Conf.CertificateABSPath, f.Conf.CertificatePermission, f.Conf.Override)
 			}
 			for _, c := range r.Status.Conditions {
 				if c.Type == certificates.CertificateDenied {
@@ -145,10 +144,10 @@ func (f *Fetch) Fetch(csr *generate.Config) error {
 					return err
 				}
 			}
-			glog.V(1).Infof("Certificate of csr/%s still not available, next try in %s", csr.Name, f.conf.PollingInterval.String())
+			glog.V(1).Infof("Certificate of csr/%s still not available, next try in %s", csrName, f.Conf.PollingInterval.String())
 
 		case <-timeout.C:
-			return fmt.Errorf("timeout during certificate fetching of csr/%s", csr.Name)
+			return fmt.Errorf("timeout during certificate fetching of csr/%s", csrName)
 		}
 	}
 }

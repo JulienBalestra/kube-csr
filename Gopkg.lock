@@ -202,6 +202,14 @@
   version = "1.0.0"
 
 [[projects]]
+  digest = "1:361de06aa7ae272616cbe71c3994a654cc6316324e30998e650f7765b20c5b33"
+  name = "github.com/pborman/uuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e790cca94e6cc75c7064b1332e63811d4aae1a53"
+  version = "v1.1"
+
+[[projects]]
   digest = "1:7231124c9669dfb54b82ef8b89f2735cf5d5d2529a23c6ac93a8c4b8bbb28b28"
   name = "github.com/pelletier/go-toml"
   packages = ["."]
@@ -452,7 +460,7 @@
   version = "kubernetes-1.10.0"
 
 [[projects]]
-  digest = "1:5306fa4e911383bc8540148123e6a81aea1786dbf592ac051fd572fdd8a173b1"
+  digest = "1:30f4e872b6c158191ed2e5b78bc8a94aebbb3386740156108b049b3ff7e38f38"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/errors",
@@ -483,6 +491,7 @@
     "pkg/util/net",
     "pkg/util/runtime",
     "pkg/util/sets",
+    "pkg/util/uuid",
     "pkg/util/validation",
     "pkg/util/validation/field",
     "pkg/util/wait",
@@ -569,6 +578,7 @@
     "k8s.io/api/certificates/v1beta1",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
+    "k8s.io/apimachinery/pkg/util/uuid",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/typed/certificates/v1beta1",
     "k8s.io/client-go/rest",

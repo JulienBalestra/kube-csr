@@ -19,6 +19,7 @@ import (
 	"github.com/JulienBalestra/kube-csr/pkg/operation/purge"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/query"
 	"github.com/JulienBalestra/kube-csr/pkg/operation/submit"
+	"github.com/JulienBalestra/kube-csr/pkg/renew"
 )
 
 const (
@@ -183,6 +184,7 @@ func NewCommand() (*cobra.Command, *int) {
 		),
 		Run: func(cmd *cobra.Command, args []string) {
 			if !viperConfig.GetBool("generate") &&
+				!viperConfig.GetBool("renew") &&
 				!viperConfig.GetBool("submit") &&
 				!viperConfig.GetBool("approve") &&
 				!viperConfig.GetBool("fetch") &&
@@ -223,7 +225,7 @@ func NewCommand() (*cobra.Command, *int) {
 			if viperConfig.GetBool("generate") {
 				generator = generate.NewGenerator(csrConfig)
 			}
-			if viperConfig.GetBool("submit") {
+			if viperConfig.GetBool("submit") || viperConfig.GetBool("renew") {
 				submitter, err = newSubmitClient()
 				if err != nil {
 					exitCode = 1
@@ -237,7 +239,7 @@ func NewCommand() (*cobra.Command, *int) {
 					return
 				}
 			}
-			if viperConfig.GetBool("fetch") {
+			if viperConfig.GetBool("fetch") || viperConfig.GetBool("renew") {
 				fetcher, err = newFetchClient()
 				if err != nil {
 					exitCode = 1
@@ -251,7 +253,7 @@ func NewCommand() (*cobra.Command, *int) {
 					return
 				}
 			}
-			err = operation.NewOperation(
+			op := operation.NewOperation(
 				&operation.Config{
 					SourceConfig: csrConfig,
 					Query:        querier,
@@ -261,7 +263,22 @@ func NewCommand() (*cobra.Command, *int) {
 					Fetch:        fetcher,
 					Purge:        purger,
 				},
-			).Run()
+			)
+			if !viperConfig.GetBool("renew") {
+				err = op.Run()
+				if err != nil {
+					glog.Errorf("Unexpected error: %v", err)
+					exitCode = 2
+					return
+				}
+				return
+			}
+			re, err := newRenew(op)
+			if err != nil {
+				exitCode = 1
+				return
+			}
+			err = re.Renew()
 			if err != nil {
 				glog.Errorf("Unexpected error: %v", err)
 				exitCode = 2
@@ -366,6 +383,32 @@ func NewCommand() (*cobra.Command, *int) {
 	issueCommand.PersistentFlags().BoolP("delete", "d", viperConfig.GetBool("delete"), "Delete the given CSR from the kube-apiserver")
 	viperConfig.BindPFlag("delete", issueCommand.PersistentFlags().Lookup("delete"))
 
+	// renew
+	viperConfig.SetDefault("renew", false)
+	issueCommand.PersistentFlags().Bool("renew", viperConfig.GetBool("renew"), "Renew")
+	viperConfig.BindPFlag("renew", issueCommand.PersistentFlags().Lookup("renew"))
+
+	viperConfig.SetDefault("renew-exit", false)
+	issueCommand.PersistentFlags().Bool("renew-exit", viperConfig.GetBool("renew-exit"), "Exit 0 after a successful renew")
+	viperConfig.BindPFlag("renew-exit", issueCommand.PersistentFlags().Lookup("renew-exit"))
+
+	viperConfig.SetDefault("renew-command", "")
+	issueCommand.PersistentFlags().String("renew-command", viperConfig.GetString("renew-command"), "Command to execute after a successful renew (using /bin/sh as interpreter)")
+	viperConfig.BindPFlag("renew-command", issueCommand.PersistentFlags().Lookup("renew-command"))
+
+	viperConfig.SetDefault("renew-threshold", time.Hour)
+	issueCommand.PersistentFlags().Duration("renew-threshold", viperConfig.GetDuration("renew-threshold"), "Renew expiration threshold")
+	viperConfig.BindPFlag("renew-threshold", issueCommand.PersistentFlags().Lookup("renew-threshold"))
+
+	viperConfig.SetDefault("renew-check-interval", time.Minute*15)
+	issueCommand.PersistentFlags().Duration("renew-check-interval", viperConfig.GetDuration("renew-check-interval"), "Interval between check of the certificate expiration")
+	viperConfig.BindPFlag("renew-check-interval", issueCommand.PersistentFlags().Lookup("renew-check-interval"))
+
+	issueCommand.PersistentFlags().Bool("disable-prometheus-exporter", viperConfig.GetBool("disable-prometheus-exporter"), "disable /metrics, paired with --renew")
+	viperConfig.BindPFlag("disable-prometheus-exporter", garbageCommand.PersistentFlags().Lookup("disable-prometheus-exporter"))
+
+	issueCommand.PersistentFlags().Bool("prometheus-exporter-bind", viperConfig.GetBool("prometheus-exporter-bind"), "prometheus exporter bind address, paired with --renew")
+	viperConfig.BindPFlag("prometheus-exporter-bind", garbageCommand.PersistentFlags().Lookup("prometheus-exporter-bind"))
 	return rootCommand, &exitCode
 }
 
@@ -513,4 +556,19 @@ func newQuery(svcToQuery []string) (*query.Query, error) {
 		return nil, err
 	}
 	return q, nil
+}
+
+func newRenew(operation *operation.Operation) (*renew.Renew, error) {
+	conf := &renew.Config{
+		Operation:                operation,
+		RenewThreshold:           viperConfig.GetDuration("renew-threshold"),
+		ExitOnRenew:              viperConfig.GetBool("renew-exit"),
+		GenerateNewKubernetesCSR: !viperConfig.GetBool("override"),
+		RenewCommand:             viperConfig.GetString("renew-command"),
+		RenewCheckInterval:       viperConfig.GetDuration("renew-check-interval"),
+	}
+	if !viperConfig.GetBool("disable-prometheus-exporter") {
+		conf.PrometheusExporterBindAddress = viperConfig.GetString("prometheus-exporter-bind")
+	}
+	return renew.NewRenewer(viperConfig.GetString("kubeconfig-path"), conf)
 }

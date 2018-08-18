@@ -18,6 +18,8 @@ gofmt:
 
 docs:
 	$(CC) run ./scripts/update/docs.go
+	$(CC) run ./scripts/update/metrics_purge.go
+	$(CC) run ./scripts/update/metrics_renew.go
 
 license:
 	./scripts/update/license.sh
