@@ -317,6 +317,10 @@ func NewCommand() (*cobra.Command, *int) {
 	issueCommand.PersistentFlags().String("private-key-file", viperConfig.GetString("private-key-file"), "Private key file target")
 	viperConfig.BindPFlag("private-key-file", issueCommand.PersistentFlags().Lookup("private-key-file"))
 
+	viperConfig.SetDefault("load-private-key", false)
+	issueCommand.PersistentFlags().Bool("load-private-key", viperConfig.GetBool("load-private-key"), "Load the private key file instead of generating one")
+	viperConfig.BindPFlag("load-private-key", issueCommand.PersistentFlags().Lookup("load-private-key"))
+
 	// generate - csr
 	viperConfig.SetDefault("csr-perm", 0600)
 
@@ -407,6 +411,7 @@ func newCSRConfig(commonName, csrName string) (*generate.Config, error) {
 		Hosts:      viperConfig.GetStringSlice("subject-alternative-names"),
 		RSABits:    viperConfig.GetInt("rsa-bits"),
 
+		LoadPrivateKey:       viperConfig.GetBool("load-private-key"),
 		PrivateKeyABSPath:    privateKeyPath,
 		PrivateKeyPermission: os.FileMode(viperConfig.GetInt("private-key-perm")),
 

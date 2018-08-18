@@ -19,7 +19,7 @@ func TestGenerator(t *testing.T) {
 
 	for _, tc := range []struct {
 		conf        *Config
-		expectedErr error
+		expectedErr string
 	}{
 		{
 			conf: &Config{
@@ -33,7 +33,7 @@ func TestGenerator(t *testing.T) {
 				CSRABSPath:           path.Join(tempDir, "1.csr"),
 				CSRPermission:        0600,
 			},
-			expectedErr: nil,
+			expectedErr: "",
 		},
 		{
 			conf: &Config{
@@ -47,7 +47,7 @@ func TestGenerator(t *testing.T) {
 				CSRABSPath:           path.Join(tempDir, "1.csr"),
 				CSRPermission:        0600,
 			},
-			expectedErr: fmt.Errorf("file exists %s/1.private_key", tempDir),
+			expectedErr: fmt.Sprintf("file exists %s/1.csr", tempDir),
 		},
 		{
 			conf: &Config{
@@ -61,7 +61,7 @@ func TestGenerator(t *testing.T) {
 				CSRABSPath:           path.Join(tempDir, "1.csr"),
 				CSRPermission:        0600,
 			},
-			expectedErr: nil,
+			expectedErr: "",
 		},
 		{
 			conf: &Config{
@@ -77,7 +77,7 @@ func TestGenerator(t *testing.T) {
 				CSRABSPath:           path.Join(tempDir, "2.csr"),
 				CSRPermission:        0600,
 			},
-			expectedErr: nil,
+			expectedErr: "",
 		},
 		{
 			conf: &Config{
@@ -93,7 +93,7 @@ func TestGenerator(t *testing.T) {
 				CSRABSPath:           path.Join(tempDir, "3.csr"),
 				CSRPermission:        0600,
 			},
-			expectedErr: nil,
+			expectedErr: "",
 		},
 		{
 			conf: &Config{
@@ -110,13 +110,36 @@ func TestGenerator(t *testing.T) {
 				CSRABSPath:           path.Join(tempDir, "4.csr"),
 				CSRPermission:        0600,
 			},
-			expectedErr: nil,
+			expectedErr: "",
+		},
+		{
+			conf: &Config{
+				Name:       "test-5",
+				Override:   true,
+				CommonName: "cn-5",
+				Hosts: []string{
+					"example.com",
+					"192.168.1.1",
+				},
+				RSABits:              1024,
+				LoadPrivateKey:       true,
+				PrivateKeyABSPath:    path.Join(tempDir, "5.private_key"),
+				PrivateKeyPermission: 0600,
+				CSRABSPath:           path.Join(tempDir, "5.csr"),
+				CSRPermission:        0600,
+			},
+			expectedErr: fmt.Sprintf("open %s/5.private_key: no such file or directory", tempDir),
 		},
 	} {
 		t.Run(tc.conf.Name, func(t *testing.T) {
 			g := NewGenerator(tc.conf)
 			err := g.Generate()
-			assert.Equal(t, tc.expectedErr, err)
+			if tc.expectedErr == "" && err != nil {
+				t.Errorf(err.Error())
+			}
+			if tc.expectedErr != "" {
+				assert.Equal(t, tc.expectedErr, err.Error())
+			}
 		})
 	}
 }

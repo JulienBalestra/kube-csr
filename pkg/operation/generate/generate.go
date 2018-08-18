@@ -11,7 +11,9 @@ import (
 	"os"
 	"sort"
 
+	"encoding/pem"
 	"github.com/JulienBalestra/kube-csr/pkg/utils/pemio"
+	"io/ioutil"
 )
 
 const (
@@ -27,6 +29,7 @@ type Config struct {
 	CommonName string `json:"common-name"`
 	Hosts      []string
 
+	LoadPrivateKey       bool
 	RSABits              int
 	PrivateKeyABSPath    string
 	PrivateKeyPermission os.FileMode
@@ -79,13 +82,38 @@ func (g *Generator) categorizeHosts() ([]string, []net.IP, error) {
 }
 
 func (g *Generator) generateCryptoData() ([]byte, []byte, error) {
-	privateKey, err := rsa.GenerateKey(rand.Reader, g.conf.RSABits)
-	if err != nil {
-		glog.Errorf("Unexpected error during the RSA Key generation: %v", err)
-		return nil, nil, err
-	}
-	privKeyBytes := x509.MarshalPKCS1PrivateKey(privateKey)
+	var privateKey *rsa.PrivateKey
+	var err error
 
+	if g.conf.LoadPrivateKey {
+		glog.V(0).Infof("Loading private key %v", g.conf.PrivateKeyABSPath)
+		b, err := ioutil.ReadFile(g.conf.PrivateKeyABSPath)
+		if err != nil {
+			glog.Errorf("Cannot load existing private key: %v", err)
+			return nil, nil, err
+		}
+		p, _ := pem.Decode(b)
+		if p == nil {
+			err = fmt.Errorf("cannot decode private key %s", g.conf.PrivateKeyABSPath)
+			glog.Errorf("Unexpected error: %v", err)
+			return nil, nil, err
+		}
+		privateKey, err = x509.ParsePKCS1PrivateKey(p.Bytes)
+		if err != nil {
+			glog.Errorf("Cannot parse the given private key %s: %v", g.conf.PrivateKeyABSPath, err)
+			return nil, nil, err
+		}
+
+	} else {
+		glog.V(0).Infof("Generating private key")
+		privateKey, err = rsa.GenerateKey(rand.Reader, g.conf.RSABits)
+		if err != nil {
+			glog.Errorf("Unexpected error during the RSA Key generation: %v", err)
+			return nil, nil, err
+		}
+	}
+
+	privKeyBytes := x509.MarshalPKCS1PrivateKey(privateKey)
 	if g.conf.CommonName == "" {
 		glog.Errorf("Invalid empty CommonName")
 		return nil, nil, fmt.Errorf("empty CommonName")
@@ -123,14 +151,12 @@ func (g *Generator) Generate() error {
 	}
 
 	// write to FS
-	err = pemio.WritePem(privKeyBytes, rsaPrivateKeyType, g.conf.PrivateKeyABSPath, g.conf.PrivateKeyPermission, g.conf.Override)
-	if err != nil {
-		return err
-	}
 	err = pemio.WritePem(csrBytes, csrType, g.conf.CSRABSPath, g.conf.CSRPermission, g.conf.Override)
 	if err != nil {
 		return err
 	}
-
-	return nil
+	if g.conf.LoadPrivateKey {
+		return nil
+	}
+	return pemio.WritePem(privKeyBytes, rsaPrivateKeyType, g.conf.PrivateKeyABSPath, g.conf.PrivateKeyPermission, g.conf.Override)
 }
