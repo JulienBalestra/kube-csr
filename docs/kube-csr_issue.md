@@ -56,6 +56,7 @@ kube-csr issue skydns --csr-name kv-etcd -gsafd --override --kubeconfig-path ~/.
   -g, --generate                            Generate CSR
   -h, --help                                help for issue
       --hostname string                     Hostname, leave empty to fulfill with hostname
+      --load-private-key                    Load the private key file instead of generating one
       --override                            Override any existing file pem and k8s csr resource
       --private-key-file string             Private key file target (default "kube-csr.private_key")
       --query-interval duration             Polling interval for kube-service query (default 2s)
