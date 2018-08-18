@@ -6,11 +6,10 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"fmt"
+	"github.com/golang/glog"
 	"net"
 	"os"
-	"strings"
-
-	"github.com/golang/glog"
+	"sort"
 
 	"github.com/JulienBalestra/kube-csr/pkg/utils/pemio"
 )
@@ -50,26 +49,31 @@ func NewGenerator(conf *Config) *Generator {
 func (g *Generator) categorizeHosts() ([]string, []net.IP, error) {
 	var dnsNames []string
 	var ipAddresses []net.IP
-	var invalidHosts []string
+	hostSet := make(map[string]struct{}, len(g.conf.Hosts))
 
 	for _, host := range g.conf.Hosts {
+		_, ok := hostSet[host]
+		if ok {
+			glog.V(0).Infof("Host %s already added, skipping", host)
+			continue
+		}
+		hostSet[host] = struct{}{}
 		ip := net.ParseIP(host)
 		if ip != nil {
 			ipAddresses = append(ipAddresses, ip)
 			glog.V(0).Infof("Added IP address %s", ip.String())
 			continue
 		}
-		if strings.ContainsRune(host, rune('.')) {
-			dnsNames = append(dnsNames, host)
-			glog.V(0).Infof("Added DNS name %s", host)
-			continue
-		}
-		glog.Errorf("Invalid entry: host %q is neither IP address nor DNS name", host)
-		invalidHosts = append(invalidHosts, host)
+		dnsNames = append(dnsNames, host)
+		glog.V(0).Infof("Added DNS name %s", host)
 	}
-	if len(invalidHosts) > 0 {
-		return nil, nil, fmt.Errorf("cannot categorize given hosts: %s", strings.Join(invalidHosts, ", "))
-	}
+
+	// sort to get a stable result
+	sort.Strings(dnsNames)
+	sort.Slice(ipAddresses, func(i, j int) bool {
+		return ipAddresses[i].String() < ipAddresses[i].String()
+	})
+
 	glog.V(0).Infof("CSR with %d DNS names and %d IP addresses", len(dnsNames), len(ipAddresses))
 	return dnsNames, ipAddresses, nil
 }

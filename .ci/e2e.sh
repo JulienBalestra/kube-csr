@@ -3,6 +3,7 @@
 set -exuo pipefail
 
 cd $(dirname $0)/..
+rm -fv kube-csr.certificate kube-csr.csr kube-csr.private_key /tmp/foo.certificate /tmp/foo.csr /tmp/foo.private_key
 
 kubectl apply -f examples/metrics-server.yaml
 kubectl apply -f examples/etcd.yaml
