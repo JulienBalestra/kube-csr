@@ -5,9 +5,6 @@ set -exuo pipefail
 cd $(dirname $0)/..
 rm -fv kube-csr.certificate kube-csr.csr kube-csr.private_key /tmp/foo.certificate /tmp/foo.csr /tmp/foo.private_key existing-key
 
-HOSTNAME=$(hostname)
-kubectl delete csr e2e-${HOSTNAME} existing-key-${HOSTNAME} || true
-
 kubectl get csr
 
 kubectl apply -f examples/metrics-server.yaml
@@ -24,9 +21,9 @@ openssl verify -CAfile ca.crt kube-csr.certificate
 rm -fv kube-csr.certificate kube-csr.csr kube-csr.private_key
 
 openssl genrsa 2048 > existing-key
-cp -av existing-key existing-key.origin
-./kube-csr issue existing-key --load-private-key --private-key-file=existing-key --query-svc=kubernetes --generate --submit --approve --fetch --kubeconfig-path $HOME/.kube/config
-diff existing-key existing-key.origin
+cp -av existing-key kube-csr.private_key
+./kube-csr issue existing-key --load-private-key --private-key-file=kube-csr.private_key --query-svc=kubernetes --generate --submit --approve --fetch --kubeconfig-path $HOME/.kube/config
+diff existing-key kube-csr.private_key
 openssl verify -CAfile ca.crt kube-csr.certificate
 
 timeout 600 ./.ci/etcd.sh
