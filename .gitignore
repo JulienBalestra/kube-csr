@@ -6,3 +6,6 @@
 /kube-csr.sha512sum
 /.idea
 /.ci/metrics-server.yaml
+/ca.crt
+/existing-key
+/reference.certificate

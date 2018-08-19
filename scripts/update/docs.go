@@ -12,15 +12,12 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"sort"
 	"strings"
 
 	"github.com/golang/glog"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra/doc"
 
 	"github.com/JulienBalestra/kube-csr/cmd"
-	"github.com/JulienBalestra/kube-csr/pkg/operation/purge"
 )
 
 func init() {
@@ -74,31 +71,4 @@ func main() {
 		glog.Infof("Successfully generated %s", path.Join(docDir, f.Name()))
 	}
 	glog.Infof("Generated command line documentation in %s", docDir)
-
-	err = purge.RegisterPrometheusMetrics(&purge.Purge{})
-	if err != nil {
-		glog.Exitf("%s", err)
-	}
-	metrics, err := prometheus.DefaultGatherer.Gather()
-	if err != nil {
-		glog.Exitf("%s", err)
-	}
-
-	var metricsToWrite []string
-	for _, m := range metrics {
-		metricsToWrite = append(metricsToWrite, fmt.Sprintf("%q,%q,%q\n", m.GetName(), m.GetType(), m.GetHelp()))
-	}
-
-	metricFile, err := os.OpenFile(path.Join(docDir, "metrics.csv"), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		glog.Exitf("%s", err)
-	}
-	defer metricFile.Close()
-	metricFile.WriteString("name,type,help\n")
-	sort.Strings(metricsToWrite)
-	for _, elt := range metricsToWrite {
-		metricFile.WriteString(elt)
-	}
-	metricFile.Sync()
-	glog.Infof("Generated metrics file in %s", metricFile.Name())
 }

@@ -36,6 +36,7 @@ core,"github.com/matttproud/golang_protobuf_extensions/pbutil",Apache-2.0
 core,"github.com/mitchellh/mapstructure",MIT
 core,"github.com/modern-go/concurrent",Apache-2.0
 core,"github.com/modern-go/reflect2",Apache-2.0
+core,"github.com/pborman/uuid",NewBSD
 core,"github.com/pelletier/go-toml",MIT
 core,"github.com/pmezard/go-difflib/difflib",FreeBSD
 core,"github.com/prometheus/client_golang/prometheus",Apache-2.0
@@ -140,6 +141,7 @@ core,"k8s.io/apimachinery/pkg/util/json",Apache-2.0
 core,"k8s.io/apimachinery/pkg/util/net",Apache-2.0
 core,"k8s.io/apimachinery/pkg/util/runtime",Apache-2.0
 core,"k8s.io/apimachinery/pkg/util/sets",Apache-2.0
+core,"k8s.io/apimachinery/pkg/util/uuid",Apache-2.0
 core,"k8s.io/apimachinery/pkg/util/validation",Apache-2.0
 core,"k8s.io/apimachinery/pkg/util/validation/field",Apache-2.0
 core,"k8s.io/apimachinery/pkg/util/wait",Apache-2.0

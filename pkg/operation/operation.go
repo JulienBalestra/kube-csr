@@ -26,6 +26,8 @@ type Config struct {
 // Operation state
 type Operation struct {
 	*Config
+
+	approved bool
 }
 
 // NewOperation instantiate an Operation to potentially
@@ -37,7 +39,7 @@ type Operation struct {
 // certificates through the kubernetes API.
 func NewOperation(conf *Config) *Operation {
 	return &Operation{
-		conf,
+		Config: conf,
 	}
 }
 
@@ -53,13 +55,14 @@ func (o *Operation) submit() error {
 	if err != nil {
 		return err
 	}
-	o.Approve = nil
+	o.approved = true
 	return nil
 }
 
 // Run executes all the configured operations
 func (o *Operation) Run() error {
 	glog.V(0).Infof("Running operations ...")
+	o.approved = false
 	if o.Query != nil {
 		sans, err := o.Query.GetKubernetesServicesSubjectAlternativeNames()
 		if err != nil {
@@ -79,20 +82,19 @@ func (o *Operation) Run() error {
 			return err
 		}
 	}
-	if o.Approve != nil {
+	if o.Approve != nil && !o.approved {
 		err := o.Approve.GetAndApproveCSR(o.SourceConfig.Name)
 		if err != nil {
 			return err
 		}
 	}
 	if o.Fetch != nil {
-		err := o.Fetch.Fetch(o.SourceConfig)
+		err := o.Fetch.Fetch(o.SourceConfig.Name)
 		if err != nil {
 			return err
 		}
 	}
 	if o.Purge != nil {
-		// TODO be constant on csrName
 		err := o.Purge.Delete(o.SourceConfig.Name)
 		if err != nil {
 			return err
