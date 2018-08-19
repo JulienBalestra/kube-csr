@@ -40,6 +40,20 @@ For example, you can do the following actions:
 
 ![diagram](docs/diagram.svg)
 
+
+**Renew**
+
+You can choose to add a sidecar to proceed to a periodic renew with, at least the following operations:
+* submit the generated CSR
+* fetch the generated **externally approved** certificate
+
+A common scenario could be to automatically approve the submitted CSR like:
+* use the previously generated files (private_key, csr)
+* submit the generated CSR
+* approve the submitted CSR
+* fetch the generated certificate
+
+
 ## Garbage collector - gc
 
 Delete any Kubernetes csr resources who meets the chosen requirements:
