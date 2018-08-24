@@ -14,9 +14,9 @@ dist: trusty
 
 env:
   matrix:
-    - HYPERKUBE_VERSION=1.11.0
-    - HYPERKUBE_VERSION=1.10.5
-    #- HYPERKUBE_VERSION=1.9.8 TODO restore when pupernetes release 0.7.0
+    - HYPERKUBE_VERSION=1.11.2
+    - HYPERKUBE_VERSION=1.10.7
+    - HYPERKUBE_VERSION=1.9.8
 
 before_install:
   - sudo apt-get update -qq
@@ -34,7 +34,7 @@ install:
 
   - sudo curl -Lf https://storage.googleapis.com/kubernetes-release/release/v$HYPERKUBE_VERSION/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
   - sudo chmod +x /usr/local/bin/kubectl
-  - sudo curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.7.0/pupernetes -o /usr/local/bin/pupernetes
+  - sudo curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.8.0/pupernetes -o /usr/local/bin/pupernetes
   - sudo chmod +x /usr/local/bin/pupernetes
 
 script:
