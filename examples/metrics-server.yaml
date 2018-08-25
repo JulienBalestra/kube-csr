@@ -134,7 +134,7 @@ spec:
         - --tls-cert-file=/etc/certs/metrics-server.certificate
         - --tls-ca-file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         - --tls-private-key-file=/etc/certs/metrics-server.private_key
-        - --metric-resolution=6s # caution: value for tests, default is 1m0s
+        - --metric-resolution=30s # caution: value for tests, default is 1m0s
         - --source=kubernetes.summary_api:''?useServiceAccount=true&kubeletHttps=true&kubeletPort=10250
 
         # alternative if the kubelet TLS bootstrap doesn't issue proper server certs
