@@ -1,6 +1,25 @@
+- [v0.5.0](#v0.5.0)
 - [v0.4.0](#v0.4.0)
 - [v0.3.0](#v0.3.0)
 - [v0.2.0](#v0.2.0)
+
+## v0.5.0
+
+### Features
+* Introduce the renew feature #54
+* Move the main to the root #48
+* Add logging messages in the operation package #45
+
+### Bugfix
+* Dedup and sort SAN, validate all DNS names #51
+
+### Other
+* ci: bump p8s #55
+* Upgrade dep to 0.5 #52
+* Metrics-server is self registered #50
+* ci: bump p8s to 0.7.0 #46
+* Add the metrics-server as example #44
+* example: add the query, test the issue.go in e2e #43
 
 ## v0.4.0
 
