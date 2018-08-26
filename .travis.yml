@@ -16,7 +16,6 @@ env:
   matrix:
     - HYPERKUBE_VERSION=1.11.2
     - HYPERKUBE_VERSION=1.10.7
-    - HYPERKUBE_VERSION=1.9.8
 
 before_install:
   - sudo apt-get update -qq
