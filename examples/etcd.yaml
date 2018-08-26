@@ -168,8 +168,8 @@ metadata:
   name: etcdctl
   namespace: default
 spec:
-  backoffLimit: 5
-  activeDeadlineSeconds: 60
+  backoffLimit: 30
+  activeDeadlineSeconds: 90
   template:
     metadata:
       labels:
